@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Essay &amp; Quiz Grader</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-icon">✅</div>
+    <div>
+      <h1>AI Essay &amp; Quiz Grader</h1>
+      <p class="tagline">ผู้ช่วยตรวจเรียงความและข้อสอบปรนัย พร้อมกลไกด้านจริยธรรม AI ในตัว</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span id="mode-badge" class="badge badge-live" title="สถานะการเชื่อมต่อ AI">…</span>
+    <button id="btn-privacy" class="btn btn-ghost" title="นโยบายความเป็นส่วนตัว">🔒 ความเป็นส่วนตัว</button>
+    <button id="btn-settings" class="btn btn-ghost" title="ตั้งค่า">⚙️</button>
+  </div>
+</header>
+
+<main>
+  <!-- ═══════════ TABS ═══════════ -->
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="essay" role="tab">📝 ตรวจเรียงความ</button>
+    <button class="tab" data-tab="quiz" role="tab">🧾 ตรวจข้อสอบปรนัย</button>
+    <button class="tab" data-tab="audit" role="tab">🗂 บันทึกการแก้ไข (Audit Log)</button>
+  </nav>
+
+  <!-- ═══════════ ESSAY TAB ═══════════ -->
+  <section id="tab-essay" class="tab-panel active">
+    <div class="grid-2">
+      <div class="card">
+        <h2>1 · วางเรียงความของนักเรียน</h2>
+        <textarea id="essay-input" rows="14" placeholder="วางข้อความเรียงความที่นี่…&#10;&#10;ตัวอย่าง: การเปลี่ยนแปลงสภาพภูมิอากาศเป็นปัญหาเร่งด่วนของมนุษยชาติ…"></textarea>
+        <div class="row">
+          <button id="btn-sample-essay" class="btn btn-ghost btn-sm">📄 ใส่ตัวอย่างเรียงความ</button>
+          <span class="hint">ข้อความจะไม่ถูกบันทึกหรือส่งไปที่ใดนอกจากโมเดล AI ที่คุณเลือก</span>
+        </div>
+
+        <h2 class="mt">2 · เลือกเกณฑ์การให้คะแนน (Rubric)</h2>
+        <div id="rubric-picker" class="rubric-picker"></div>
+        <details class="transparency">
+          <summary>🔍 Transparency — ดูคำสั่ง (prompt) ที่จะส่งให้ AI</summary>
+          <pre id="prompt-preview" class="prompt-preview">(กดปุ่ม "ตรวจและให้คะแนน" ก่อน เพื่อดู prompt ที่ใช้จริง)</pre>
+        </details>
+
+        <div class="row actions">
+          <button id="btn-grade" class="btn btn-primary btn-lg">✨ ตรวจและให้คะแนน</button>
+          <button id="btn-consistency" class="btn btn-outline" title="ให้ AI ตรวจซ้ำ 3 ครั้ง แล้วเปรียบเทียบคะแนน เพื่อแสดงความสม่ำเสมอของระบบ">🔁 Consistency Check (×3)</button>
+          <span id="grade-status" class="status"></span>
+        </div>
+      </div>
+
+      <div class="card" id="essay-result-card">
+        <h2>ผลการตรวจ</h2>
+        <div id="essay-result" class="result-empty">
+          <p>ยังไม่มีการตรวจ — วางเรียงความแล้วกด "ตรวจและให้คะแนน"</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ QUIZ TAB ═══════════ -->
+  <section id="tab-quiz" class="tab-panel">
+    <div class="grid-2">
+      <div class="card">
+        <h2>1 · วางโจทย์ข้อสอบปรนัย</h2>
+        <p class="hint">รูปแบบ: บรรทัดโจทย์ ตามด้วยตัวเลือก a) b) c) d) — คั่นแต่ละข้อด้วยบรรทัดว่าง</p>
+        <textarea id="quiz-input" rows="10" placeholder="1. ข้อใดคือผลกระทบหลักของภาวะโลกร้อน&#10;a) ระดับน้ำทะเลสูงขึ้น&#10;b) แผ่นดินไหวบ่อยขึ้น&#10;c) ภูเขาไฟระเบิด&#10;d) ไม่มีข้อใดถูก&#10;&#10;2. …"></textarea>
+        <h2 class="mt">2 · วางคำตอบของนักเรียน (เช่น 1a 2c 3b)</h2>
+        <textarea id="answers-input" rows="3" placeholder="1a 2b 3c 4a"></textarea>
+        <div class="row">
+          <button id="btn-sample-quiz" class="btn btn-ghost btn-sm">📄 ใส่ตัวอย่างข้อสอบ</button>
+        </div>
+        <details class="transparency">
+          <summary>🔍 Transparency — ดูคำสั่ง (prompt) ที่จะส่งให้ AI</summary>
+          <pre id="quiz-prompt-preview" class="prompt-preview">(ยังไม่มี)</pre>
+        </details>
+        <div class="row actions">
+          <button id="btn-quiz-grade" class="btn btn-primary btn-lg">✨ สร้างเฉลยและตรวจคำตอบ</button>
+          <span id="quiz-status" class="status"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>ผลคะแนนและเฉลย</h2>
+        <div id="quiz-result" class="result-empty"><p>ยังไม่มีการตรวจ</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ AUDIT TAB ═══════════ -->
+  <section id="tab-audit" class="tab-panel">
+    <div class="card">
+      <h2>บันทึกการแก้ไขคะแนนโดยมนุษย์ (Accountability &amp; Human Oversight)</h2>
+      <p class="hint">ทุกครั้งที่คุณใช้สิทธิ์ครู (Teacher Override) แก้คะแนน AI ระบบจะบันทึกไว้ที่นี่ในเบราว์เซอร์ของคุณเท่านั้น — เพื่อแสดงว่า "การตัดสินใจสุดท้ายเป็นของมนุษย์ และมีร่องรอยให้ตรวจสอบ"</p>
+      <div id="audit-list" class="audit-list"></div>
+      <div class="row actions">
+        <button id="btn-clear-audit" class="btn btn-ghost btn-sm">🗑 ล้างบันทึก</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ═══════════ PRIVACY MODAL ═══════════ -->
+<div id="modal-privacy" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2>🔒 Privacy &amp; Data Protection</h2>
+    <ul class="privacy-list">
+      <li><b>ไม่มีการบันทึกข้อมูลงานนักเรียนบนเซิร์ฟเวอร์</b> — ข้อความเรียงความ/ข้อสอบถูกส่งตรงไปยังโมเดล AI ที่คุณกำหนด แล้วแสดงผลทันที ไม่เก็บลงฐานข้อมูล</li>
+      <li><b>API key ไม่อยู่ในหน้าเว็บ</b> — กุญแจถูกเก็บไว้ฝั่ง proxy (serve.py) บนเครื่องของคุณเท่านั้น เบราว์เซอร์ไม่ได้รับและไม่สามารถเห็น key ได้</li>
+      <li><b>Audit log เก็บในเครื่องคุณ</b> — บันทึกการแก้คะแนนอยู่ใน localStorage ของเบราว์เซอร์นี้ ไม่ถูกส่งออกไปภายนอก</li>
+      <li><b>โหมดสาธิต (Demo Mode)</b> — ถ้าไม่ตั้งค่า key ระบบจะทำงานด้วยผลลัพธ์จำลองที่ติดป้าย "DEMO" ชัดเจน และไม่มีการเรียก API ใด ๆ</li>
+      <li><b>ข้อควรระวังจริง (เราไม่ปกปิด)</b> — ข้อความที่ถูกส่งไปยังผู้ให้บริการ AI ภายนอกอยู่ภายใต้นโยบายข้อมูลของผู้ให้บริการนั้น หากงานนักเรียนมีข้อมูลส่วนบุคคล ควรลบออกก่อนส่ง หรือใช้โมเดลที่โฮสต์เอง (on-premise)</li>
+    </ul>
+    <button class="btn btn-primary modal-close">เข้าใจแล้ว</button>
+  </div>
+</div>
+
+<!-- ═══════════ SETTINGS MODAL ═══════════ -->
+<div id="modal-settings" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2>⚙️ ตั้งค่า</h2>
+    <label class="field">
+      <span>โหมดการทำงาน</span>
+      <select id="set-mode">
+        <option value="auto">อัตโนมัติ — ใช้ proxy ถ้ามี key, ไม่งั้นใช้ Demo Mode</option>
+        <option value="demo">บังคับ Demo Mode (จำลองผล ไม่เรียก AI จริง)</option>
+      </select>
+    </label>
+    <label class="field">
+      <span>Temperature (ความคิดสร้างสรรค์ของโมเดล — ค่าต่ำ = สม่ำเสมอกว่า)</span>
+      <input id="set-temp" type="range" min="0" max="1" step="0.1" value="0.2">
+      <output id="set-temp-out">0.2</output>
+    </label>
+    <label class="field">
+      <span>โมเดล</span>
+      <input id="set-model" type="text" value="qwen3.8-max">
+    </label>
+    <p class="hint">ค่าต่าง ๆ ถูกเก็บใน localStorage ของเบราว์เซอร์นี้เท่านั้น</p>
+    <button class="btn btn-primary modal-close">บันทึก</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/api.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
