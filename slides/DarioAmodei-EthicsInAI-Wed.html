@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>DarioAmodei-EthicsInAI-Wed</title>
+<style>
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-Regular.ttf'); font-weight: 400; }
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-Medium.ttf'); font-weight: 500; }
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-SemiBold.ttf'); font-weight: 600; }
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-Bold.ttf'); font-weight: 700; }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: #0f1117; }
+body { font-family: 'Kanit', 'Noto Sans Thai', sans-serif; color: #e8eaf0; }
+
+@page { size: 1280px 720px; margin: 0; }
+@media print {
+  html, body { background: #0f1117; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { page-break-after: always; break-after: page; }
+}
+
+.slide {
+  width: 1280px; height: 720px;
+  page-break-after: always; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #0f1117 0%, #151a28 100%);
+  padding: 56px 72px; display: flex; flex-direction: column;
+}
+.slide:last-child { page-break-after: auto; }
+
+.pagenum { position: absolute; bottom: 22px; right: 36px; color: #5a6178; font-size: 14px; }
+.brandtag { position: absolute; bottom: 22px; left: 36px; color: #5a6178; font-size: 14px; }
+
+.accent { color: #6c8cff; }
+.green { color: #3ecf8e; }
+.amber { color: #f5b74e; }
+
+h1 { font-size: 52px; font-weight: 700; letter-spacing: -0.5px; }
+h2 { font-size: 34px; font-weight: 600; margin-bottom: 18px; }
+h2 .num { color: #6c8cff; font-weight: 700; margin-right: 10px; }
+p, li { font-size: 19px; line-height: 1.55; color: #c9cede; }
+.small { font-size: 15.5px; line-height: 1.5; color: #9aa1b5; }
+
+ul { padding-left: 26px; }
+li { margin-bottom: 9px; }
+li::marker { color: #6c8cff; }
+b, strong { color: #fff; font-weight: 600; }
+
+.cols { display: flex; gap: 28px; flex: 1; min-height: 0; }
+.col { flex: 1; min-width: 0; }
+
+.card {
+  background: rgba(30,34,48,.75); border: 1px solid #2a2f3f;
+  border-radius: 14px; padding: 18px 22px; margin-bottom: 12px;
+}
+.card h3 { font-size: 19px; font-weight: 600; margin-bottom: 6px; }
+.card p, .card li { font-size: 15.5px; line-height: 1.45; color: #b8bed0; }
+.card.hl { border-color: rgba(108,140,255,.5); background: rgba(108,140,255,.08); }
+.card.warn { border-color: rgba(245,183,78,.45); background: rgba(245,183,78,.07); }
+.card.good { border-color: rgba(62,207,142,.45); background: rgba(62,207,142,.07); }
+
+.pill { display: inline-block; background: rgba(108,140,255,.15); border: 1px solid rgba(108,140,255,.45); color: #8fa8ff; border-radius: 999px; padding: 3px 14px; font-size: 14px; font-weight: 500; margin: 0 6px 6px 0; }
+
+code, pre {
+  font-family: 'SF Mono', Menlo, monospace; font-size: 13.5px;
+  background: #0b0d14; border: 1px solid #2a2f3f; border-radius: 10px;
+}
+pre { padding: 14px 16px; color: #a8b3cf; white-space: pre-wrap; line-height: 1.45; }
+code { padding: 1px 7px; color: #8fa8ff; font-size: 15px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
+th { text-align: left; color: #8fa8ff; font-weight: 600; padding: 8px 10px; border-bottom: 2px solid #2a2f3f; font-size: 15px; }
+td { padding: 7px 10px; border-bottom: 1px solid #22273a; color: #c9cede; }
+
+/* cover */
+.cover { justify-content: center; align-items: flex-start; }
+.cover .course { font-size: 19px; color: #9aa1b5; margin-bottom: 14px; }
+.cover .logo { font-size: 84px; margin-bottom: 18px; }
+.cover .members { margin-top: 34px; }
+
+.footer-note { position: absolute; bottom: 52px; left: 72px; right: 72px; }
+</style>
+</head>
+<body>
+
+<!-- ═════════ SLIDE 1 — COVER ═════════ -->
+<div class="slide cover">
+  <div class="logo">✅</div>
+  <div class="course">05506015 Computer Ethics and Professional Issues · Term Project: Ethics in AI · ภาคเรียน 1/2569</div>
+  <h1>AI Essay &amp; Quiz Grader</h1>
+  <p style="font-size:22px;margin-top:10px">ผู้ช่วยตรวจเรียงความและข้อสอบปรนัยด้วย AI <span class="accent">พร้อมกลไกด้านจริยธรรมในตัวแอป</span></p>
+  <div class="members">
+    <p style="font-size:20px"><b>กลุ่ม Dario Amodei</b> · จำนวนสมาชิก 6 คน</p>
+  </div>
+  <div class="brandtag">Sec วันพุธ</div>
+  <div class="pagenum">1 / 8</div>
+</div>
+
+<!-- ═════════ SLIDE 2 — WHAT THE AI DOES ═════════ -->
+<div class="slide">
+  <h2><span class="num">02</span>แอปพลิเคชันใช้ AI ทำอะไร</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="card hl">
+        <h3>📝 ตรวจเรียงความ (Essay Grading)</h3>
+        <p>วางเรียงความ → เลือก Rubric (ทั่วไป / เชิงโต้แย้ง / Pitch Deck) → AI ให้คะแนน<b>แยกรายเกณฑ์</b> พร้อมคอมเมนต์และ Feedback รายบุคคล</p>
+      </div>
+      <div class="card hl">
+        <h3>🧾 ตรวจข้อสอบปรนัย (Quiz Grading)</h3>
+        <p>วางโจทย์ MCQ + คำตอบนักเรียน → AI <b>วิเคราะห์และสร้างเฉลย</b>พร้อมคำอธิบายรายข้อ → ระบบเทียบคำตอบและคำนวณคะแนน</p>
+      </div>
+      <div class="card">
+        <h3>🤖 โมเดลที่ใช้</h3>
+        <p>Qwen 3.8 Max ผ่าน OpenAI-compatible API · เรียกผ่าน local proxy (Python) — API key ไม่ผ่านเบราว์เซอร์</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card good">
+        <h3>✨ กลไกจริยธรรมที่ฝังในตัวแอป (ไม่ใช่แค่สไลด์)</h3>
+        <ul style="padding-left:20px">
+          <li><b>Transparency panel</b> — แสดง prompt จริงที่ส่งให้ AI ทุกครั้ง</li>
+          <li><b>Anti-Hallucination</b> — ทุกคะแนนต้องแนบข้อความยกตรง (quote) จากตัวงาน</li>
+          <li><b>Consistency Check</b> — ตรวจงานเดิม 3 รอบ แสดงส่วนต่างคะแนน</li>
+          <li><b>Teacher Override + Audit Log</b> — มนุษย์แก้คะแนนได้ ต้องระบุเหตุผล ระบบบันทึกทุกครั้ง</li>
+          <li><b>Demo Mode ติดป้ายชัดเจน</b> — ผลลัพธ์จำลองไม่แอบอ้างเป็น AI จริง</li>
+        </ul>
+      </div>
+      <div class="card warn">
+        <h3>▶ การสาธิตสด</h3>
+        <p>รัน <code>python3 serve.py</code> → เปิด localhost:8000 → วางเรียงความตัวอย่าง → กดตรวจ → ดูคะแนนรายเกณฑ์ + evidence → กด Consistency Check ให้ดูคะแนนแกว่งจริง → แก้คะแนนด้วย Teacher Override → เปิด Audit Log</p>
+      </div>
+    </div>
+  </div>
+  <div class="brandtag">Dario Amodei · AI Essay &amp; Quiz Grader</div>
+  <div class="pagenum">2 / 8</div>
+</div>
+
+<!-- ═════════ SLIDE 3 — ETHICS ISSUES FOUND ═════════ -->
+<div class="slide">
+  <h2><span class="num">03</span>ประเด็นจริยธรรม AI ที่พบในแอปของเรา <span class="small">(วิเคราะห์เชิงลึก — ไม่ใช่แค่ระบุหัวข้อ)</span></h2>
+  <div class="cols">
+    <div class="col">
+      <div class="card warn">
+        <h3>⚖️ Bias / Fairness</h3>
+        <p>โมเดลภาษาฝึกจากข้อมูลภาษาอังกฤษ/ไทยกลางเป็นหลัก → <b>ลำเอียงต่อสำนวนของนักเรียนที่ไม่ใช่เจ้าของภาษา</b> หรือใช้ภาษาท้องถิ่น งานที่ "เขียนสวยตามขนบ" อาจได้คะแนนสูงกว่างานที่เนื้อหาลึกแต่ภาษาง่าย — <b>ให้รางวัลกับสไตล์ ไม่ใช่สาระ</b></p>
+      </div>
+      <div class="card warn">
+        <h3>🎭 Hallucination / Accuracy</h3>
+        <p>ผลทดสอบจริงตอนพัฒนา: AI เคย<b>อ้างว่าพบคำสะกดผิดจำนวนมากในงานที่สะกดถูก</b> และให้คะแนนไวยากรณ์ต่ำโดยไม่มีหลักฐาน — ถ้าครูไม่ตรวจ นักเรียนถูกตัดคะแนนฟรี</p>
+      </div>
+      <div class="card warn">
+        <h3>🔍 Transparency</h3>
+        <p>คะแนนเป็น black box — นักเรียนไม่รู้ว่าถูกหักคะแนนเพราะอะไร <b>อุทธรณ์ไม่ได้</b> ถ้ามองไม่เห็นเกณฑ์และเหตุผล</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card warn">
+        <h3>🔒 Privacy (PDPA)</h3>
+        <p>เรียงความ/ข้อสอบอาจมีข้อมูลส่วนบุคคลของนักเรียน (ข้อมูลผู้เยาว์ = <b>ข้อมูลอ่อนไหวตามกฎหมาย</b>) การส่งไป API ภายนอก = เปิดเผยข้อมูลให้ผู้ให้บริการโดยผู้เรียนไม่เคยยินยอม</p>
+      </div>
+      <div class="card warn">
+        <h3>🧑‍⚖️ Accountability</h3>
+        <p>ถ้า AI ให้คะแนนผิดจนนักเรียนเสียสิทธิ์ — ใครรับผิดชอบ? ครูที่กดปุ่ม? ผู้พัฒนาแอป? หรือผู้ให้บริการโมเดล? <b>ปัจจุบันไม่มีกฎหมายระบุชัด</b> → ถ้าไม่มี audit trail จะโยนความผิดกันไปมา</p>
+      </div>
+      <div class="card warn">
+        <h3>🔁 Consistency &amp; Over-reliance</h3>
+        <p>ทดลองจริง: งานเดิม ตรวจ 3 รอบ คะแนนรวม <b>34 → 34 → 30 (แกว่ง 4 คะแนนเต็ม)</b> — ไม่ยุติธรรมต่อนักเรียนคนเดียวกัน และเมื่อระบบแกว่ง ครูอาจยิ่งพึ่ง AI เพราะ "ขี้เกียจตรวจเอง" แทนที่จะทบทวน</p>
+      </div>
+    </div>
+  </div>
+  <div class="brandtag">Dario Amodei · AI Essay &amp; Quiz Grader</div>
+  <div class="pagenum">3 / 8</div>
+</div>
+
+<!-- ═════════ SLIDE 4 — MITIGATIONS ═════════ -->
+<div class="slide">
+  <h2><span class="num">04</span>แนวทางแก้ไข/ป้องกัน ถ้าเราพัฒนาแอปนี้จริง</h2>
+  <table>
+    <tr><th style="width:180px">ประเด็น</th><th>แนวทางแก้ไข</th><th style="width:250px">ตัวอย่างรูปธรรม</th></tr>
+    <tr><td><b>Bias / Fairness</b></td><td>ทดสอบอคติด้วยชุดข้อมูลหลากหลายก่อนปล่อยใช้งาน (bias audit) + ระบุใน prompt ห้ามตัดสินจากสไตล์ภาษา + ให้คะแนนแยก "เนื้อหา" ออกจาก "ภาษา" เสมอ</td><td>ตรวจ essay เดียวกันที่เขียนโดยเจ้าของภาษา/ไม่ใช่เจ้าของภาษา เทียบคะแนน — ถ้าต่างอย่างมีนัยสำคัญ ต้องจูน rubric ก่อนเปิดใช้</td></tr>
+    <tr><td><b>Hallucination</b></td><td>บังคับ evidence-based grading: ทุกคะแนนต้อง quote ข้อความจริงจากงาน + ระบบตรวจกลับอัตโนมัติว่า quote มีอยู่จริงในต้นฉบับ</td><td><span class="green">ทำแล้วในแอป</span> — ถ้า evidence ไม่พบในข้อความต้นฉบับ ระบบขึ้นธง ⚠ ให้ครูตรวจสอบ</td></tr>
+    <tr><td><b>Transparency</b></td><td>เปิดเผย rubric + เหตุผลรายเกณฑ์ให้ผู้เรียนดูได้ทุกเมื่อ + มีช่องทางอุทธรณ์</td><td><span class="green">ทำแล้วในแอป</span> — Transparency panel แสดง prompt จริง + คะแนนนักเรียนกดดูเหตุผลรายข้อได้</td></tr>
+    <tr><td><b>Privacy / PDPA</b></td><td>ไม่เก็บงานนักเรียนบนเซิร์ฟเวอร์ (stateless) + key อยู่ฝั่ง proxy + anonymize ก่อนส่ง + ขอความยินยอมชัดเจน</td><td><span class="green">ทำแล้วในแอป</span> — ข้อความถูกส่งตรงแล้วทิ้ง ไม่ลง DB; โรงเรียนใหญ่ควรใช้ on-premise model แทน API ภายนอก</td></tr>
+    <tr><td><b>Accountability</b></td><td>Human-in-the-loop บังคับ: AI เป็น "ผู้ช่วย" ไม่ใช่ "ผู้ตัดสิน" + Audit log ทุกการแก้คะแนนพร้อมเหตุผล</td><td><span class="green">ทำแล้วในแอป</span> — Teacher Override บังคับกรอกเหตุผล มิฉะนั้นบันทึกไม่ได้</td></tr>
+    <tr><td><b>Consistency</b></td><td>temperature ต่ำ + ตรวจหลายรอบใช้มัธยฐาน + แจ้งผู้ใช้ตรง ๆ ว่าระบบมีความแปรปรวนเท่าไร</td><td><span class="green">ทำแล้วในแอป</span> — Consistency Check ×3 แสดงส่วนต่างพร้อมคำแนะนำ</td></tr>
+  </table>
+  <div class="brandtag">Dario Amodei · AI Essay &amp; Quiz Grader</div>
+  <div class="pagenum">4 / 8</div>
+</div>
+
+<!-- ═════════ SLIDE 5 — HOW WE VIBE CODED ═════════ -->
+<div class="slide">
+  <h2><span class="num">05</span>เราใช้ Vibe Coding สร้างแอปอย่างไร <span class="small">(ลำดับ prompt จริง — แอปนี้ถูก vibe code ทั้งโปรเจกต์)</span></h2>
+  <div class="cols">
+    <div class="col">
+      <div class="card">
+        <h3>ลำดับการทำงาน</h3>
+        <ul style="padding-left:20px">
+          <li><b>1. ป้อนโจทย์</b> — ส่ง PDF ใบงาน + ไอเดียที่เลือกให้ AI agent (Hermes Agent + Qwen 3.8 Max)</li>
+          <li><b>2. ให้ agent วางแผน</b> — เสนอสถาปัตยกรรม: static web app + local proxy (Python stdlib) + Demo Mode</li>
+          <li><b>3. Agent เขียนโค้ดทั้งโปรเจกต์</b> — HTML / CSS / JS 3 ไฟล์ / serve.py โดยเรา<b>ไม่ได้พิมพ์โค้ดเองเลย</b></li>
+          <li><b>4. Agent ทดสอบตัวเอง</b> — เรียก API จริง + ขับเบราว์เซอร์ headless (CDP) กดทุก flow + ตรวจ screenshot ว่าภาษาไทย render ถูก</li>
+          <li><b>5. เจอบั๊กจริง → แก้</b> — โมเดล reasoning เผา token budget กับการ "คิด" จนได้คำตอบว่างเปล่า → เพิ่ม max_tokens + auto-retry</li>
+          <li><b>6. Deploy</b> — git push → GitHub Pages อัตโนมัติ</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>เครื่องมือ</h3>
+        <span class="pill">Hermes Agent</span><span class="pill">Qwen 3.8 Max</span><span class="pill">Vanilla HTML/CSS/JS</span><span class="pill">Python stdlib proxy</span><span class="pill">GitHub Pages</span>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card hl">
+        <h3>Prompt หลักที่มนุษย์พิมพ์จริง</h3>
+        <pre>"i need to made an app for this i think web app
+ would work what you think"
+
+"can you plan it out and do the whole thing for me"</pre>
+        <p class="small">ที่เหลือ agent ต่อยอดเองทั้งหมด: ออกแบบ UI, เขียน prompt engineering ของระบบตรวจ (rubric prompt, JSON schema, evidence rule), ทดสอบ, แก้บั๊ก, deploy</p>
+      </div>
+      <div class="card good">
+        <h3>ผลลัพธ์</h3>
+        <p>เว็บแอปทำงานได้จริงครบทุก flow ภายใน<b>เซสชันเดียว</b> — ถ้าเขียนเองตามวิธีดั้งเดิม (ออกแบบ UI, เขียน backend, ทดสอบ, deploy) อาจใช้เวลาหลายวัน</p>
+      </div>
+      <div class="card">
+        <h3>สิ่งที่มนุษย์ยังต้องทำ</h3>
+        <ul style="padding-left:20px">
+          <li>ตัดสินใจเลือกไอเดียและยืนยันสถาปัตยกรรม</li>
+          <li>ตรวจสอบว่าผลตรวจของ AI สมเหตุสมผล (อ่าน evidence ด้วยตา)</li>
+          <li>รับผิดชอบต่อสิ่งที่ deploy ออกสู่สาธารณะ</li>
+        </ul>
+        <p class="small" style="margin-top:6px">→ แก่นของ vibe coding: มนุษย์ย้ายจาก "คนเขียนโค้ด" เป็น <b>"คนกำกับและรับผิดชอบ"</b></p>
+      </div>
+    </div>
+  </div>
+  <div class="brandtag">Dario Amodei · AI Essay &amp; Quiz Grader</div>
+  <div class="pagenum">5 / 8</div>
+</div>
+
+<!-- ═════════ SLIDE 6 — ETHICS OF VIBE CODING ═════════ -->
+<div class="slide">
+  <h2><span class="num">06</span>Vibe Coding ก่อให้เกิดประเด็นจริยธรรมในการพัฒนาโปรแกรมอย่างไร <span class="small">(จากประสบการณ์ตรงของโปรเจกต์นี้)</span></h2>
+  <div class="cols">
+    <div class="col">
+      <div class="card warn">
+        <h3>1 · นักพัฒนาไม่เข้าใจโค้ดที่ตนปล่อยออกไป</h3>
+        <p>โค้ดถูกสร้างเร็วเกินกว่าจะ review ทัน — เรา<b>ไม่เคยอ่าน serve.py ทั้งไฟล์</b>ก่อน deploy ถ้ามีช่องโหว่ (เช่น key รั่ว, injection) ผู้ใช้จริงคือเหยื่อ ทั้งที่ไม่มีใครตั้งใจเขียนบั๊ก → คำถาม accountability: <b>ใครรับผิดชอบโค้ดที่มนุษย์สั่งให้เกิดแต่ไม่เคยอ่าน?</b></p>
+      </div>
+      <div class="card warn">
+        <h3>2 · ความปลอดภัยถูกแลกกับความไว</h3>
+        <p>ตัวอย่างจริงจากโปรเจกต์: agent เผลอ commit ไฟล์ log เข้า git repo สาธารณะรอบแรก (ไม่มี key แต่สะท้อนว่า <b>vibe coding ทำให้ "พลาดแล้วเผยแพร่" เกิดง่ายมาก</b> เพราะทุกอย่างเร็วและอัตโนมัติ) — ถ้าพลาดเป็นไฟล์ key.txt ผลคือ key รั่วสู่สาธารณะทันที</p>
+      </div>
+      <div class="card warn">
+        <h3>3 · อคติของโมเดลถูกฝังลงในผลิตภัณฑ์โดยไม่รู้ตัว</h3>
+        <p>AI เขียนทั้ง UI copy, rubric, prompt วิศวกรรม — <b>ค่านิยมที่แฝงในข้อมูลฝึกของโมเดลถูกส่งต่อให้ผู้ใช้ปลายทางโดยไม่มีใครกรอง</b> เช่น การเลือกเกณฑ์ให้คะแนนแบบไหน "ดี" ก็ถูกตัดสินโดยโมเดลตั้งแต่ต้น</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card warn">
+        <h3>4 · ทักษะนักพัฒนารุ่นใหม่ถูกกัดกร่อน</h3>
+        <p>ถ้าเด็ก CS พึ่ง vibe coding ตั้งแต่เรียนปี 1 จะ<b>ไม่ผ่านการฝึก debug/ออกแบบด้วยตัวเอง</b> — ระยะยาวอุตสาหกรรมได้ "ผู้กดปุ่ม" ที่แยกแยะโค้ดดี/เลวไม่ได้ ซึ่งเป็นอันตรายเมื่อระบบที่ต้องรับผิดชอบมีผลกระทบต่อชีวิตคน</p>
+      </div>
+      <div class="card warn">
+        <h3>5 · ผลงาน/ลิขสิทธิ์กำกวม</h3>
+        <p>โค้ดที่โมเดลเขียนอาจ<b>คล้ายโค้ดมีลิขสิทธิ์จากข้อมูลฝึก</b> โดยไม่มีใครรู้ — ใครเป็นเจ้าของแอปนี้? คนสั่ง? บริษัทโมเดล? และถ้าแอปทำรายได้ ลิขสิทธิ์อยู่ที่ใคร (ปัจจุบันกฎหมายยังไม่มีคำตอบชัด)</p>
+      </div>
+      <div class="card good">
+        <h3>แนวทางของเรา: Vibe Coding อย่างรับผิดชอบ</h3>
+        <ul style="padding-left:20px">
+          <li>ใช้ agent เขียน แต่<b>ทดสอบทุก flow ด้วยตัวเอง/ด้วยเครื่องมืออัตโนมัติ</b>ก่อนส่งมอบ</li>
+          <li>ความลับ (API key) ต้องอยู่นอกโค้ดที่ commit เสมอ + ตรวจ git ก่อน push</li>
+          <li>เปิดเผยในสไลด์ตรง ๆ ว่าส่วนไหน AI ทำ ส่วนไหนมนุษย์ตัดสินใจ</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="brandtag">Dario Amodei · AI Essay &amp; Quiz Grader</div>
+  <div class="pagenum">6 / 8</div>
+</div>
+
+<!-- ═════════ SLIDE 7 — REFERENCES ═════════ -->
+<div class="slide">
+  <h2><span class="num">07</span>แหล่งอ้างอิง</h2>
+  <div class="card" style="flex:1">
+    <ul style="padding-left:22px">
+      <li style="margin-bottom:14px">Office of the United Nations High Commissioner for Human Rights. (2024). <i>Artificial intelligence and human rights.</i> https://www.ohchr.org/en/digital-age/artificial-intelligence-and-human-rights</li>
+      <li style="margin-bottom:14px">European Union. (2024). <i>Artificial Intelligence Act (Regulation (EU) 2024/1689).</i> https://artificialintelligenceact.eu</li>
+      <li style="margin-bottom:14px">UNESCO. (2021). <i>Recommendation on the Ethics of Artificial Intelligence.</i> https://unesdoc.unesco.org/ark:/48223/pf0000381137</li>
+      <li style="margin-bottom:14px">สำนักงานคณะกรรมการคุ้มครองข้อมูลส่วนบุคคล. (2565). <i>พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA).</i> https://www.pdpc.or.th</li>
+      <li style="margin-bottom:14px">Karpathy, A. (2025, February 3). <i>"There's a new kind of coding I call 'vibe coding'"</i> [Post]. X. https://x.com/karpathy/status/1886192184808149383</li>
+      <li style="margin-bottom:14px">OpenAI. (n.d.). <i>GPT-4 system card.</i> https://cdn.openai.com/papers/gpt-4-system-card.pdf</li>
+      <li style="margin-bottom:14px">Lecturer, KMITL. (2569). <i>ใบงาน Term Project: เรื่อง Ethics in AI — วิชา 05506015 Computer Ethics and Professional Issues.</i> (เอกสารประกอบการเรียน)</li>
+    </ul>
+  </div>
+  <div class="brandtag">Dario Amodei · AI Essay &amp; Quiz Grader</div>
+  <div class="pagenum">7 / 8</div>
+</div>
+
+<!-- ═════════ SLIDE 8 — MEMBERS ═════════ -->
+<div class="slide">
+  <h2><span class="num">08</span>สมาชิกกลุ่ม</h2>
+  <div class="card hl" style="max-width:760px">
+    <p style="font-size:22px;margin-bottom:14px"><b>กลุ่ม Dario Amodei</b> · จำนวนสมาชิก <b>6</b> คน</p>
+    <table style="font-size:18px">
+      <tr><td style="width:40px">1.</td><td>69050510</td><td>วัชระ จันนามอม</td><td class="accent">(เพชร)</td></tr>
+      <tr><td>2.</td><td>69050737</td><td>จิตตวดี สุเดชะ</td><td class="accent">(บีม)</td></tr>
+      <tr><td>3.</td><td>69050778</td><td>ชุติเทพ แสงเดือน</td><td class="accent">(ปาล์ม)</td></tr>
+      <tr><td>4.</td><td>69050784</td><td>ฐนกร โสมาบุตร</td><td class="accent">(เก่ง)</td></tr>
+      <tr><td>5.</td><td>69051095</td><td>วสุพล พิรุณรักษ์</td><td class="accent">(โอม)</td></tr>
+      <tr><td>6.</td><td>69051119</td><td>ศิริขวัญ บุญประสาร</td><td class="accent">(โมริ)</td></tr>
+    </table>
+  </div>
+  <p class="small" style="margin-top:18px">Sec วันพุธ · วิชา 05506015 Computer Ethics and Professional Issues · ภาคเรียน 1/2569</p>
+  <div class="brandtag">Dario Amodei · AI Essay &amp; Quiz Grader</div>
+  <div class="pagenum">8 / 8</div>
+</div>
+
+</body>
+</html>
