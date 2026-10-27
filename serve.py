@@ -30,7 +30,21 @@ PORT = int(os.environ.get("PORT", "8000"))
 UPSTREAM = os.environ.get(
     "UPSTREAM_URL", "https://bifrost.pm2.fun/openai/v1/chat/completions"
 )
-DEFAULT_MODEL = os.environ.get("UPSTREAM_MODEL", "qwen3.8-max")
+DEFAULT_MODEL = os.environ.get("UPSTREAM_MODEL", "nta-gptoss/openai/gpt-oss-120b")
+# Reasoning models can spend minutes per grading call; keep this generous.
+UPSTREAM_TIMEOUT = int(os.environ.get("UPSTREAM_TIMEOUT", "600"))
+
+# Gateway models, fastest/most reliable first (measured 2026-10-27).
+# gpt-oss-120b: essay ~10-11s, quiz ~3s, 0 failures, valid JSON every run.
+# qwen3.8-max : essay 41-290s (reasoning tokens), intermittent connection resets.
+AVAILABLE_MODELS = [
+    {"id": "nta-gptoss/openai/gpt-oss-120b",
+     "label": "GPT-OSS 120B — เร็ว (~10 วิ) · เสถียร · แนะนำ"},
+    {"id": "qwen3.8-max",
+     "label": "Qwen 3.8 Max — ช้า (~40-120 วิ) · คิดละเอียดกว่า"},
+    {"id": "nta-qwen/Qwen/Qwen3.8-27B",
+     "label": "Qwen 3.8 27B — ช้า · (ทดสอบแล้วไม่ผ่าน JSON)"},
+]
 
 
 def load_key() -> str:
@@ -67,6 +81,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 {
                     "live": bool(key),
                     "model": DEFAULT_MODEL,
+                    "models": AVAILABLE_MODELS,
                     "upstream": "proxy",
                     "message": "Proxy live: key held server-side."
                     if key
@@ -102,6 +117,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             "temperature": req.get("temperature", 0.2),
             "max_tokens": req.get("max_tokens", 8192),
         }
+        # optional passthrough for provider-specific knobs (e.g. thinking control)
+        for k, v in (req.get("extra") or {}).items():
+            if k not in ("messages",):
+                payload[k] = v
         upstream_req = urllib.request.Request(
             UPSTREAM,
             data=json.dumps(payload).encode(),
@@ -112,7 +131,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             method="POST",
         )
         try:
-            with urllib.request.urlopen(upstream_req, timeout=180) as resp:
+            with urllib.request.urlopen(upstream_req, timeout=UPSTREAM_TIMEOUT) as resp:
                 data = json.loads(resp.read().decode())
         except urllib.error.HTTPError as e:
             detail = e.read().decode(errors="replace")[:500]
@@ -137,7 +156,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return
         except KeyError:
             text = json.dumps(data)[:2000]
-        out = json.dumps({"text": text, "model": payload["model"]}).encode()
+        out = json.dumps({
+            "text": text,
+            "model": payload["model"],
+            "usage": {
+                "in": data.get("usage", {}).get("prompt_tokens"),
+                "out": data.get("usage", {}).get("completion_tokens"),
+                "thinking": (data.get("usage", {}).get("completion_tokens_details") or {}).get("reasoning_tokens"),
+            },
+            "finish_reason": data["choices"][0].get("finish_reason"),
+        }).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self._cors()
@@ -153,8 +181,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
 
-class ReusableTCPServer(socketserver.TCPServer):
+class ReusableTCPServer(socketserver.ThreadingTCPServer):
+    """Threaded so the UI + parallel consistency checks don't queue/block."""
     allow_reuse_address = True
+    daemon_threads = True
 
 
 if __name__ == "__main__":

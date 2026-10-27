@@ -36,11 +36,12 @@ const RUBRICS = {
 
 // ───────────────────────── State ─────────────────────────
 const S = {
-  settings: JSON.parse(localStorage.getItem("aeg_settings") || '{"mode":"auto","temperature":0.2,"model":"qwen3.8-max"}'),
+  settings: JSON.parse(localStorage.getItem("aeg_settings") || '{"mode":"auto","temperature":0.2,"model":""}'),
   liveProxy: false,
   currentRubric: "general",
   lastEssayResult: null,
   lastEssayText: "",
+  models: [],
 };
 const $ = id => document.getElementById(id);
 
@@ -55,8 +56,37 @@ const $ = id => document.getElementById(id);
   bindAudit();
 
   S.liveProxy = await API.probe();
+
+  // Load the model list the proxy exposes; migrate stale saved defaults.
+  const cfg = API.config();
+  const list = (cfg && cfg.models && cfg.models.length)
+    ? cfg.models
+    : [{ id: "nta-gptoss/openai/gpt-oss-120b", label: "GPT-OSS 120B (เร็ว)" }];
+  S.models = list;
+  const ids = list.map(m => m.id);
+  const saved = S.settings.model;
+  if (!saved || !ids.includes(saved)) {
+    // empty, or an old default the proxy no longer recommends (e.g. qwen3.8-max)
+    S.settings.model = (cfg && ids.includes(cfg.model)) ? cfg.model : ids[0];
+    localStorage.setItem("aeg_settings", JSON.stringify(S.settings));
+  }
+  fillModelSelect();
   updateModeBadge();
 })();
+
+function fillModelSelect() {
+  const sel = $("set-model");
+  if (!sel) return;
+  sel.innerHTML = S.models.map(m =>
+    `<option value="${esc(m.id)}" ${m.id === S.settings.model ? "selected" : ""}>${esc(m.label || m.id)}</option>`).join("");
+  const hint = $("model-hint");
+  if (hint) {
+    const cur = S.models.find(m => m.id === S.settings.model);
+    hint.textContent = cur
+      ? `กำลังใช้: ${cur.id}`
+      : "";
+  }
+}
 
 function effectiveDemo() {
   return S.settings.mode === "demo" || !S.liveProxy;
@@ -107,7 +137,7 @@ function bindModals() {
     $("set-mode").value = S.settings.mode;
     $("set-temp").value = S.settings.temperature;
     $("set-temp-out").value = S.settings.temperature;
-    $("set-model").value = S.settings.model;
+    fillModelSelect();
     $("modal-settings").classList.remove("hidden");
   };
   document.querySelectorAll(".modal-close").forEach(b =>
@@ -125,10 +155,12 @@ function bindSettings() {
     S.settings = {
       mode: $("set-mode").value,
       temperature: parseFloat($("set-temp").value),
-      model: $("set-model").value.trim() || "qwen3.8-max",
+      model: $("set-model").value || (S.models[0] && S.models[0].id) || "",
     };
     localStorage.setItem("aeg_settings", JSON.stringify(S.settings));
+    fillModelSelect();
     updateModeBadge();
+    toast(`บันทึกแล้ว · โมเดล: ${S.settings.model}`);
   }
 }
 
@@ -226,27 +258,39 @@ async function gradeEssay(consistencyMode) {
   const prompt = buildEssayPrompt(text, rubric);
   $("prompt-preview").textContent = prompt;
 
-  const runs = consistencyMode ? 3 : 1;
   const btn = consistencyMode ? $("btn-consistency") : $("btn-grade");
   btn.disabled = true; $("btn-grade").disabled = true; $("btn-consistency").disabled = true;
 
   const results = [];
   try {
-    for (let i = 0; i < runs; i++) {
-      status.innerHTML = `<span class="spinner"></span> กำลังตรวจ${consistencyMode ? ` (รอบ ${i + 1}/${runs})` : ""}…`;
-      let res;
-      if (effectiveDemo()) {
-        res = await Demo.gradeEssay(text, rubric);
-      } else {
-        const { text: raw } = await API.chat(
-          [{ role: "user", content: prompt }],
-          { temperature: S.settings.temperature, model: S.settings.model }
-        );
-        res = normalizeEssayResult(extractJSON(raw), rubric);
-        res.demo = false;
-      }
-      results.push(res);
+    // Live elapsed timer — grading can take 1-3 min with a reasoning model,
+    // so show progress instead of a frozen spinner.
+    const t0 = performance.now();
+    const timer = setInterval(() => {
+      const s = Math.round((performance.now() - t0) / 1000);
+      status.innerHTML = `<span class="spinner"></span> AI กำลังวิเคราะห์… <b>${s}s</b>`;
+    }, 250);
+
+    const oneRun = async () => {
+      if (effectiveDemo()) return Demo.gradeEssay(text, rubric);
+      const { text: raw } = await API.chat(
+        [{ role: "user", content: prompt }],
+        { temperature: S.settings.temperature, model: S.settings.model }
+      );
+      const res = normalizeEssayResult(extractJSON(raw), rubric);
+      res.demo = false;
+      return res;
+    };
+
+    if (consistencyMode) {
+      // Run all 3 in PARALLEL — same total info, ~1/3 the wall time.
+      status.innerHTML = `<span class="spinner"></span> กำลังตรวจพร้อมกัน 3 รอบ…`;
+      results.push(...await Promise.all([oneRun(), oneRun(), oneRun()]));
+    } else {
+      results.push(await oneRun());
     }
+    clearInterval(timer);
+
     S.lastEssayResult = results[results.length - 1];
     S.lastEssayText = text;
 

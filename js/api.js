@@ -3,6 +3,7 @@
  */
 const API = (() => {
   let _live = null; // null = unknown, true/false after probe
+  let _config = null;
 
   async function probe() {
     if (_live !== null) return _live;
@@ -11,8 +12,10 @@ const API = (() => {
       if (!r.ok) throw new Error("no proxy");
       const j = await r.json();
       _live = !!j.live;
+      _config = j;
     } catch {
       _live = false; // static host (GitHub Pages) → demo mode
+      _config = null;
     }
     return _live;
   }
@@ -45,7 +48,7 @@ const API = (() => {
     return { text: j.text, model: j.model, demo: false };
   }
 
-  return { probe, chat };
+  return { probe, chat, config: () => _config };
 })();
 
 /** Extract JSON from a model response that may contain prose/markdown fences. */
