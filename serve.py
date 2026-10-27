@@ -159,9 +159,28 @@ class ReusableTCPServer(socketserver.TCPServer):
 
 if __name__ == "__main__":
     key_state = "LIVE (key loaded)" if load_key() else "DEMO (no key found)"
-    with ReusableTCPServer(("", PORT), Handler) as httpd:
-        print(f"AI Essay & Quiz Grader → http://localhost:{PORT}  [{key_state}]")
+    port = PORT
+    for attempt in range(6):
         try:
-            httpd.serve_forever()
-        except KeyboardInterrupt:
-            print("\nbye")
+            with ReusableTCPServer(("", port), Handler) as httpd:
+                if port != PORT:
+                    print(f"⚠️  Port {PORT} was busy — serving on {port} instead")
+                print(f"AI Essay & Quiz Grader → http://localhost:{port}  [{key_state}]")
+                print("กด Ctrl+C เพื่อหยุดเซิร์ฟเวอร์ (ห้ามปิดหน้าต่างนี้ระหว่างนำเสนอ)")
+                try:
+                    httpd.serve_forever()
+                except KeyboardInterrupt:
+                    print("\nbye")
+            break
+        except OSError as e:
+            if e.errno != 48:  # not "address in use"
+                raise
+            print(f"⚠️  Port {port} ถูกใช้งานอยู่ (Errno 48) — ลอง port ถัดไป…")
+            port += 1
+    else:
+        print(
+            "❌ ทุก port ({}–{}) ถูกใช้งานอยู่\n"
+            "   หาโปรเซสที่ค้างอยู่ด้วย:  lsof -nP -iTCP:{} -sTCP:LISTEN\n"
+            "   แล้วปิดด้วย:            pkill -f serve.py".format(PORT, port, PORT)
+        )
+        sys.exit(1)
