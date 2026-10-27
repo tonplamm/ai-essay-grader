@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Essay &amp; Quiz Grader</title>
 <link rel="stylesheet" href="css/styles.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23efece4'/><rect x='6' y='6' width='88' height='88' fill='none' stroke='%236b4e28' stroke-width='4'/><text x='50' y='72' font-family='Georgia' font-size='62' text-anchor='middle' fill='%235e4a22'>A</text></svg>">
 </head>
 <body>
 
 <header class="topbar">
   <div class="brand">
-    <div class="brand-icon">✅</div>
+    <img class="brand-mark" src="assets/sunflower.png" alt="">
     <div>
       <h1>AI Essay &amp; Quiz Grader</h1>
       <p class="tagline">ผู้ช่วยตรวจเรียงความและข้อสอบปรนัย พร้อมกลไกด้านจริยธรรม AI ในตัว</p>
@@ -19,49 +19,52 @@
   </div>
   <div class="topbar-right">
     <span id="mode-badge" class="badge badge-live" title="สถานะการเชื่อมต่อ AI">…</span>
-    <button id="btn-privacy" class="btn btn-ghost" title="นโยบายความเป็นส่วนตัว">🔒 ความเป็นส่วนตัว</button>
-    <button id="btn-settings" class="btn btn-ghost" title="ตั้งค่า">⚙️</button>
+    <button id="btn-privacy" class="btn btn-ghost" title="นโยบายความเป็นส่วนตัว">ความเป็นส่วนตัว</button>
+    <button id="btn-settings" class="btn btn-ghost" title="ตั้งค่า">ตั้งค่า</button>
   </div>
 </header>
 
 <main>
+  <img class="deco-sunflower" src="assets/sunflower.png" alt="">
+
   <!-- ═══════════ TABS ═══════════ -->
   <nav class="tabs" role="tablist">
-    <button class="tab active" data-tab="essay" role="tab">📝 ตรวจเรียงความ</button>
-    <button class="tab" data-tab="quiz" role="tab">🧾 ตรวจข้อสอบปรนัย</button>
-    <button class="tab" data-tab="audit" role="tab">🗂 บันทึกการแก้ไข (Audit Log)</button>
+    <button class="tab active" data-tab="essay" role="tab">ตรวจเรียงความ</button>
+    <button class="tab" data-tab="quiz" role="tab">ตรวจข้อสอบปรนัย</button>
+    <button class="tab" data-tab="audit" role="tab">บันทึกการแก้ไข <span class="lat">(Audit Log)</span></button>
   </nav>
 
   <!-- ═══════════ ESSAY TAB ═══════════ -->
   <section id="tab-essay" class="tab-panel active">
     <div class="grid-2">
       <div class="card">
-        <h2>1 · วางเรียงความของนักเรียน</h2>
+        <h2 class="step"><span class="step-n">01</span>วางเรียงความของนักเรียน</h2>
         <textarea id="essay-input" rows="14" placeholder="วางข้อความเรียงความที่นี่…&#10;&#10;ตัวอย่าง: การเปลี่ยนแปลงสภาพภูมิอากาศเป็นปัญหาเร่งด่วนของมนุษยชาติ…"></textarea>
         <div class="demo-kit">
-          <div class="demo-kit-label">🎬 ชุดสาธิต (Demo Kit) — กดเพื่อโหลดตัวอย่าง</div>
+          <div class="demo-kit-label">ชุดสาธิต <span class="lat">(Demo Kit)</span>: กดเพื่อโหลดตัวอย่าง</div>
           <div class="demo-kit-btns" id="demo-kit-btns"></div>
         </div>
         <div class="row">
           <span class="hint">ข้อความจะไม่ถูกบันทึกหรือส่งไปที่ใดนอกจากโมเดล AI ที่คุณเลือก</span>
         </div>
 
-        <h2 class="mt">2 · เลือกเกณฑ์การให้คะแนน (Rubric)</h2>
+        <h2 class="step mt"><span class="step-n">02</span>เลือกเกณฑ์การให้คะแนน <span class="lat">(Rubric)</span></h2>
         <div id="rubric-picker" class="rubric-picker"></div>
         <details class="transparency">
-          <summary>🔍 Transparency — ดูคำสั่ง (prompt) ที่จะส่งให้ AI</summary>
+          <summary><span class="hl hl-peach"><span class="lat">Transparency</span></span> ดูคำสั่ง <span class="lat">(prompt)</span> ที่จะส่งให้ AI</summary>
           <pre id="prompt-preview" class="prompt-preview">(กดปุ่ม "ตรวจและให้คะแนน" ก่อน เพื่อดู prompt ที่ใช้จริง)</pre>
         </details>
 
         <div class="row actions">
-          <button id="btn-grade" class="btn btn-primary btn-lg">✨ ตรวจและให้คะแนน</button>
-          <button id="btn-consistency" class="btn btn-outline" title="ให้ AI ตรวจซ้ำ 3 ครั้ง แล้วเปรียบเทียบคะแนน เพื่อแสดงความสม่ำเสมอของระบบ">🔁 Consistency Check (×3)</button>
+          <button id="btn-grade" class="btn btn-primary btn-lg">ตรวจและให้คะแนน</button>
+          <button id="btn-consistency" class="btn btn-outline" title="ให้ AI ตรวจซ้ำ 3 ครั้ง แล้วเปรียบเทียบคะแนน เพื่อแสดงความสม่ำเสมอของระบบ"><span class="lat">Consistency Check ×3</span></button>
           <span id="grade-status" class="status"></span>
         </div>
       </div>
 
       <div class="card" id="essay-result-card">
-        <h2>ผลการตรวจ</h2>
+        <h2 class="card-title">ผลการตรวจ</h2>
+        <p id="essay-busy" class="busy-note hidden"></p>
         <div id="essay-result" class="result-empty">
           <p>ยังไม่มีการตรวจ — วางเรียงความแล้วกด "ตรวจและให้คะแนน"</p>
         </div>
@@ -73,28 +76,29 @@
   <section id="tab-quiz" class="tab-panel">
     <div class="grid-2">
       <div class="card">
-        <h2>1 · วางโจทย์ข้อสอบปรนัย</h2>
+        <h2 class="step"><span class="step-n">01</span>วางโจทย์ข้อสอบปรนัย</h2>
         <p class="hint">รูปแบบ: บรรทัดโจทย์ ตามด้วยตัวเลือก a) b) c) d) — คั่นแต่ละข้อด้วยบรรทัดว่าง</p>
         <textarea id="quiz-input" rows="10" placeholder="1. ข้อใดคือผลกระทบหลักของภาวะโลกร้อน&#10;a) ระดับน้ำทะเลสูงขึ้น&#10;b) แผ่นดินไหวบ่อยขึ้น&#10;c) ภูเขาไฟระเบิด&#10;d) ไม่มีข้อใดถูก&#10;&#10;2. …"></textarea>
-        <h2 class="mt">2 · วางคำตอบของนักเรียน (เช่น 1a 2c 3b)</h2>
+        <h2 class="step mt"><span class="step-n">02</span>วางคำตอบของนักเรียน (เช่น 1a 2c 3b)</h2>
         <textarea id="answers-input" rows="3" placeholder="1a 2b 3c 4a"></textarea>
         <div class="row">
-          <button id="btn-sample-quiz" class="btn btn-ghost btn-sm">📄 ใส่ตัวอย่างข้อสอบ</button>
-          <button id="btn-sample-quiz2" class="btn btn-ghost btn-sm">📄 ชุดที่ 2 (จริยธรรม AI)</button>
-          <button id="btn-answers-wrong" class="btn btn-ghost btn-sm">✏️ คำตอบที่ผิดบางส่วน</button>
+          <button id="btn-sample-quiz" class="btn btn-ghost btn-sm">ใส่ตัวอย่างชุดที่ 1</button>
+          <button id="btn-sample-quiz2" class="btn btn-ghost btn-sm">ใส่ตัวอย่างชุดที่ 2 (จริยธรรม AI)</button>
+          <button id="btn-answers-wrong" class="btn btn-ghost btn-sm">ใส่คำตอบที่ผิดบางส่วน</button>
         </div>
         <details class="transparency">
-          <summary>🔍 Transparency — ดูคำสั่ง (prompt) ที่จะส่งให้ AI</summary>
-          <pre id="quiz-prompt-preview" class="prompt-preview">(ยังไม่มี)</pre>
+          <summary><span class="hl hl-peach"><span class="lat">Transparency</span></span> ดูคำสั่ง <span class="lat">(prompt)</span> ที่จะส่งให้ AI</summary>
+          <pre id="quiz-prompt-preview" class="prompt-preview">(กด "สร้างเฉลยและตรวจคำตอบ" ก่อน เพื่อดู prompt ที่ใช้จริง)</pre>
         </details>
         <div class="row actions">
-          <button id="btn-quiz-grade" class="btn btn-primary btn-lg">✨ สร้างเฉลยและตรวจคำตอบ</button>
+          <button id="btn-quiz-grade" class="btn btn-primary btn-lg">สร้างเฉลยและตรวจคำตอบ</button>
           <span id="quiz-status" class="status"></span>
         </div>
       </div>
       <div class="card">
-        <h2>ผลคะแนนและเฉลย</h2>
-        <div id="quiz-result" class="result-empty"><p>ยังไม่มีการตรวจ</p></div>
+        <h2 class="card-title">ผลคะแนนและเฉลย</h2>
+        <p id="quiz-busy" class="busy-note hidden"></p>
+        <div id="quiz-result" class="result-empty"><p>ยังไม่มีการตรวจ — วางโจทย์และคำตอบของนักเรียน แล้วกด "สร้างเฉลยและตรวจคำตอบ"</p></div>
       </div>
     </div>
   </section>
@@ -102,11 +106,11 @@
   <!-- ═══════════ AUDIT TAB ═══════════ -->
   <section id="tab-audit" class="tab-panel">
     <div class="card">
-      <h2>บันทึกการแก้ไขคะแนนโดยมนุษย์ (Accountability &amp; Human Oversight)</h2>
+      <h2 class="card-title">บันทึกการแก้ไขคะแนนโดยมนุษย์ <span class="lat">(Accountability &amp; Human Oversight)</span></h2>
       <p class="hint">ทุกครั้งที่คุณใช้สิทธิ์ครู (Teacher Override) แก้คะแนน AI ระบบจะบันทึกไว้ที่นี่ในเบราว์เซอร์ของคุณเท่านั้น — เพื่อแสดงว่า "การตัดสินใจสุดท้ายเป็นของมนุษย์ และมีร่องรอยให้ตรวจสอบ"</p>
       <div id="audit-list" class="audit-list"></div>
       <div class="row actions">
-        <button id="btn-clear-audit" class="btn btn-ghost btn-sm">🗑 ล้างบันทึก</button>
+        <button id="btn-clear-audit" class="btn btn-ghost btn-sm">ล้างบันทึก</button>
       </div>
     </div>
   </section>
@@ -115,7 +119,7 @@
 <!-- ═══════════ PRIVACY MODAL ═══════════ -->
 <div id="modal-privacy" class="modal-backdrop hidden">
   <div class="modal">
-    <h2>🔒 Privacy &amp; Data Protection</h2>
+    <h2 class="en">Privacy &amp; Data Protection</h2>
     <ul class="privacy-list">
       <li><b>ไม่มีการบันทึกข้อมูลงานนักเรียนบนเซิร์ฟเวอร์</b> — ข้อความเรียงความ/ข้อสอบถูกส่งตรงไปยังโมเดล AI ที่คุณกำหนด แล้วแสดงผลทันที ไม่เก็บลงฐานข้อมูล</li>
       <li><b>API key ไม่อยู่ในหน้าเว็บ</b> — กุญแจถูกเก็บไว้ฝั่ง proxy (serve.py) บนเครื่องของคุณเท่านั้น เบราว์เซอร์ไม่ได้รับและไม่สามารถเห็น key ได้</li>
@@ -130,7 +134,7 @@
 <!-- ═══════════ SETTINGS MODAL ═══════════ -->
 <div id="modal-settings" class="modal-backdrop hidden">
   <div class="modal">
-    <h2>⚙️ ตั้งค่า</h2>
+    <h2>ตั้งค่า</h2>
     <label class="field">
       <span>โหมดการทำงาน</span>
       <select id="set-mode">
@@ -139,9 +143,13 @@
       </select>
     </label>
     <label class="field">
-      <span>Temperature (ความคิดสร้างสรรค์ของโมเดล — ค่าต่ำ = สม่ำเสมอกว่า)</span>
+      <span><span class="lat">Temperature</span> (ความคิดสร้างสรรค์ของโมเดล ค่าต่ำ = สม่ำเสมอกว่า)</span>
       <input id="set-temp" type="range" min="0" max="1" step="0.1" value="0.2">
       <output id="set-temp-out">0.2</output>
+    </label>
+    <label class="field field-check">
+      <input type="checkbox" id="set-pres">
+      <span>โหมดนำเสนอ (ขยายตัวอักษรและระยะห่างสำหรับฉายบนจอโปรเจกเตอร์)</span>
     </label>
     <label class="field">
       <span>โมเดล AI (ตัวเร็วจะทำให้ demo ไหลลื่นกว่ามาก)</span>
@@ -149,7 +157,7 @@
     </label>
     <p id="model-hint" class="hint"></p>
     <p class="hint">ค่าต่าง ๆ ถูกเก็บใน localStorage ของเบราว์เซอร์นี้เท่านั้น</p>
-    <button class="btn btn-primary modal-close">บันทึก</button>
+    <button class="btn btn-primary modal-close">ปิด</button>
   </div>
 </div>
 
