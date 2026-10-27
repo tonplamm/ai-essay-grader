@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Solutions &amp; Prevention — AI Essay &amp; Quiz Grader</title>
+<style>
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-Regular.ttf'); font-weight: 400; }
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-Medium.ttf'); font-weight: 500; }
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-SemiBold.ttf'); font-weight: 600; }
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-Bold.ttf'); font-weight: 700; }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: #EDEAE3; }
+@page { size: 1280px 720px; margin: 0; }
+@media print { html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .slide { break-after: page; } }
+
+.slide {
+  width: 1280px; height: 720px; position: relative; overflow: hidden;
+  background: #EDEAE3 url('assets/bg-paper.jpg') center/cover no-repeat;
+  font-family: 'Kanit', 'Noto Sans Thai', sans-serif;
+  color: #4F3B1C;
+  page-break-after: always;
+}
+.slide:last-child { page-break-after: auto; }
+
+/* ── decorations ── */
+.deco-sunflower { position: absolute; top: -34px; right: -22px; width: 300px; opacity: .95; pointer-events: none; }
+.deco-clipboard { position: absolute; top: 26px; right: 214px; width: 78px; pointer-events: none; }
+.deco-torn { position: absolute; bottom: -74px; right: -100px; width: 400px; opacity: .85; pointer-events: none; z-index: 1; }
+.deco-roses { position: absolute; bottom: -18px; right: -20px; height: 176px; pointer-events: none; z-index: 1; }
+
+/* ── title ── */
+.title-wrap { position: absolute; top: 26px; left: 54px; z-index: 3; }
+h1 {
+  font-family: Didot, 'Playfair Display', Georgia, serif;
+  font-size: 52px; font-weight: 400; letter-spacing: .5px; color: #5E4A22;
+  text-shadow: 2px 3px 0 rgba(190,178,158,.55);
+  line-height: 1.05;
+}
+.subtitle { font-size: 13.5px; color: #7A6440; margin-top: 5px; font-weight: 500; }
+
+/* ── grid of 8 solution cards ── */
+.grid {
+  position: absolute; top: 108px; left: 54px; right: 54px; bottom: 30px;
+  display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 9px 16px;
+  z-index: 2;
+}
+.card {
+  border: 1.6px solid #4F3B1C; background: rgba(255,253,248,.42);
+  padding: 7px 11px 7px 9px; display: flex; gap: 9px; align-items: flex-start;
+}
+.num {
+  flex: 0 0 30px; height: 30px; border-radius: 50%; background: #B0906A;
+  color: #fff; font-family: 'Courier New', monospace; font-weight: 700; font-size: 14px;
+  display: flex; align-items: center; justify-content: center; margin-top: 1px;
+}
+.body { min-width: 0; }
+.head { font-family: 'Courier New', Courier, monospace; font-weight: 700; font-size: 12.5px; color: #6B4E28; letter-spacing: .3px; line-height: 1.25; }
+.head .th { font-family: 'Kanit', sans-serif; font-weight: 600; color: #8A6B3F; font-size: 11.5px; }
+.fix { font-size: 10.9px; line-height: 1.42; color: #4A3A20; margin-top: 3px; }
+.fix b { color: #2F6E63; font-weight: 600; }
+.eg {
+  font-size: 10.2px; line-height: 1.38; color: #6B5A3C; margin-top: 3px;
+  padding-left: 7px; border-left: 2px solid #4FBCC8;
+}
+.eg .lbl { color: #2E7D86; font-weight: 600; }
+.done {
+  display: inline-block; background: #D9EFE3; color: #1F6B4A; border: 1px solid #7FBF9F;
+  font-size: 8.8px; font-weight: 600; border-radius: 3px; padding: 0 4px; margin-left: 3px;
+  vertical-align: 1px; white-space: nowrap;
+}
+.todo {
+  display: inline-block; background: #FBF0DA; color: #8A6212; border: 1px solid #D9BE7C;
+  font-size: 8.8px; font-weight: 600; border-radius: 3px; padding: 0 4px; margin-left: 3px;
+  vertical-align: 1px; white-space: nowrap;
+}
+.foot { position: absolute; bottom: 8px; left: 54px; font-size: 10px; color: #8A795A; z-index: 3; }
+.footr { position: absolute; bottom: 8px; right: 54px; font-size: 10px; color: #8A795A; z-index: 3; }
+</style>
+</head>
+<body>
+
+<!-- ══════ SLIDE: SOLUTIONS & PREVENTION ══════ -->
+<div class="slide">
+  <img class="deco-sunflower" src="assets/sunflower.png" alt="">
+  <img class="deco-clipboard" src="assets/clipboard.png" alt="">
+  <img class="deco-torn" src="assets/tornpaper.png" alt="">
+  <img class="deco-roses" src="assets/roses.png" alt="">
+
+  <div class="title-wrap">
+    <h1>Solutions &amp; Prevention</h1>
+    <div class="subtitle">แนวทางแก้ไขและป้องกัน หากนำแอปนี้ไปพัฒนาใช้งานจริง · <span style="color:#2E7D86">✓ เขียว = ทำจริงแล้วในแอป</span> · <span style="color:#8A6212">⚖ เหลือง = ระดับนโยบาย</span></div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card"><div class="num">01</div><div class="body">
+      <div class="head">Bias &amp; Fairness <span class="th">· ความลำเอียง</span></div>
+      <div class="fix"><b>ป้องกัน:</b> แยกคะแนน "เนื้อหา/เหตุผล" ออกจาก "ภาษา" · เขียนกฎ anti-bias กำกับใน prompt · ทำ bias audit ก่อนเปิดใช้จริง</div>
+      <div class="eg"><span class="lbl">ตัวอย่าง:</span> นำเรียงความเนื้อหาเดียวกัน 2 เวอร์ชัน (ภาษาสละสลวย vs non-native) มาตรวจเทียบ — ผลทดสอบจริงต่างกัน <b>36 vs 26 / 40</b> จึงต้องให้ครูทบทวนคะแนนที่ห่างผิดปกติ<span class="done">✓ ทดสอบจริงในแอป</span></div>
+    </div></div>
+
+    <div class="card"><div class="num">02</div><div class="body">
+      <div class="head">Transparency <span class="th">· ความโปร่งใส</span></div>
+      <div class="fix"><b>ป้องกัน:</b> เปิดเผย rubric + เหตุผลรายเกณฑ์ให้ผู้เรียนดูได้ · แสดง prompt จริงที่ส่งให้ AI · เปิดช่องทางอุทธรณ์คะแนน</div>
+      <div class="eg"><span class="lbl">ตัวอย่าง:</span> ปุ่ม "🔍 Transparency" ในแอป กางดูคำสั่งทั้งหมดที่ส่งให้โมเดลได้ — ผู้เรียนรู้ว่าถูกตัดสินจากเกณฑ์ใด จึงโต้แย้งได้อย่างมีเหตุผล<span class="done">✓ มีในแอปแล้ว</span></div>
+    </div></div>
+
+    <div class="card"><div class="num">03</div><div class="body">
+      <div class="head">Accountability <span class="th">· ความรับผิดชอบ</span></div>
+      <div class="fix"><b>ป้องกัน:</b> กำหนดให้ "ผู้ยืนยันผล" (ครู/สถาบัน) เป็นเจ้าของการตัดสินใจ · เก็บ audit trail ย้อนดูได้ทุกครั้งที่คะแนนถูกเปลี่ยน</div>
+      <div class="eg"><span class="lbl">ตัวอย่าง:</span> Teacher Override <b>บังคับกรอกเหตุผล</b> — ไม่ใส่เหตุผล ระบบปฏิเสธการบันทึก แล้วเขียนลง Audit Log พร้อมเวลา/คะแนนเดิม/คะแนนใหม่<span class="done">✓ มีในแอปแล้ว</span></div>
+    </div></div>
+
+    <div class="card"><div class="num">04</div><div class="body">
+      <div class="head">Accuracy &amp; Hallucination <span class="th">· ความแม่น/สร้างเรื่องเท็จ</span></div>
+      <div class="fix"><b>ป้องกัน:</b> บังคับ evidence-based grading — ทุกคะแนนต้องแนบข้อความยกตรงจากตัวงาน + ระบบตรวจกลับว่า quote มีอยู่จริง</div>
+      <div class="eg"><span class="lbl">ตัวอย่าง:</span> ทุกเกณฑ์แสดงผลกล่อง "หลักฐานจากตัวงาน" — ระหว่างพัฒนา AI เคยอ้างว่าพบคำสะกดผิดในงานที่สะกดถูก ทำให้เราเพิ่มกฎนี้<span class="done">✓ มีในแอปแล้ว</span></div>
+    </div></div>
+
+    <div class="card"><div class="num">05</div><div class="body">
+      <div class="head">Human Oversight &amp; Over-reliance <span class="th">· การกำกับโดยมนุษย์</span></div>
+      <div class="fix"><b>ป้องกัน:</b> ออกแบบให้ AI เป็น "ผู้ช่วยเสนอคะแนน" ไม่ใช่ "ผู้ตัดสิน" · ต้องมีมนุษย์ยืนยันก่อนประกาศผล · แจ้งผู้ใช้ว่าห้ามใช้ผล AI โดยไม่ตรวจ</div>
+      <div class="eg"><span class="lbl">ตัวอย่าง:</span> หน้าผลตรวจมีช่องสิทธิ์ครูอยู่ใต้คะแนนเสมอ พร้อมข้อความเตือนในหน้า Quiz ว่า "ครูควรทบทวนเฉลยก่อนนำไปใช้จริง"<span class="done">✓ มีในแอปแล้ว</span></div>
+    </div></div>
+
+    <div class="card"><div class="num">06</div><div class="body">
+      <div class="head">Privacy &amp; Data Protection <span class="th">· ความเป็นส่วนตัว (PDPA)</span></div>
+      <div class="fix"><b>ป้องกัน:</b> Stateless — ไม่เก็บงานนักเรียนบนเซิร์ฟเวอร์ · API key อยู่ฝั่ง proxy ไม่ผ่านเบราว์เซอร์ · anonymize ก่อนส่ง · ขอความยินยอม</div>
+      <div class="eg"><span class="lbl">ตัวอย่าง:</span> serve.py ถือ key ไว้ฝั่งเซิร์ฟเวอร์; ข้อความถูกส่งแล้วทิ้ง ไม่ลงฐานข้อมูล — โรงเรียนที่ต้องเข้มงวดควรใช้ on-premise model แทน API ภายนอก<span class="done">✓ มีในแอปแล้ว</span></div>
+    </div></div>
+
+    <div class="card"><div class="num">07</div><div class="body">
+      <div class="head">Copyright &amp; Data Ownership <span class="th">· ลิขสิทธิ์และความเป็นเจ้าของข้อมูล</span></div>
+      <div class="fix"><b>ป้องกัน:</b> ระบุใน ToS ว่า<b>ลิขสิทธิ์งานยังเป็นของนักเรียน</b> · ห้ามผู้ให้บริการนำข้อมูลไปฝึกโมเดลต่อ (zero-retention) · ขอ consent แยกสำหรับการใช้ข้อมูล</div>
+      <div class="eg"><span class="lbl">ตัวอย่าง:</span> เลือก API แบบไม่เก็บ log ฝึกฝน (zero-data-retention) และแจ้งนักเรียนชัดว่า "งานของคุณจะไม่ถูกนำไปเทรน AI" — พร้อมให้ผู้ปกครองยินยอมเป็นลายลักษณ์อักษร<span class="todo">⚖ ระดับนโยบาย/ToS</span></div>
+    </div></div>
+
+    <div class="card"><div class="num">08</div><div class="body">
+      <div class="head">Consistency &amp; Reliability <span class="th">· ความสม่ำเสมอ</span></div>
+      <div class="fix"><b>ป้องกัน:</b> ตั้ง temperature ต่ำ · ตรวจหลายรอบแล้วใช้<b>มัธยฐาน</b> · แสดงค่าความแปรปรวนให้ผู้ใช้เห็นตรง ๆ ไม่ปกปิด</div>
+      <div class="eg"><span class="lbl">ตัวอย่าง:</span> ปุ่ม "🔁 Consistency Check ×3" ตรวจงานเดิม 3 รอบ — ผลจริงได้ <b>34 → 34 → 30 (แกว่ง 4 คะแนน)</b> ระบบขึ้นเตือน ⚠ ทันที<span class="done">✓ มีในแอปแล้ว</span></div>
+    </div></div>
+
+  </div>
+
+  <div class="foot">Dario Amodei · AI Essay &amp; Quiz Grader</div>
+  <div class="footr">Ethics in AI · 1/2569</div>
+</div>
+
+</body>
+</html>
