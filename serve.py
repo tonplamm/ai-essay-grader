@@ -26,6 +26,9 @@ from pathlib import Path
 
 HERE = Path(__file__).parent.resolve()
 PORT = int(os.environ.get("PORT", "8000"))
+# Bind loopback by default: this proxy holds your API key, so it must not be
+# reachable by other machines on the same Wi-Fi. Set HOST=0.0.0.0 to expose it.
+HOST = os.environ.get("HOST", "127.0.0.1")
 
 UPSTREAM = os.environ.get(
     "UPSTREAM_URL", "https://bifrost.pm2.fun/openai/v1/chat/completions"
@@ -192,10 +195,11 @@ if __name__ == "__main__":
     port = PORT
     for attempt in range(6):
         try:
-            with ReusableTCPServer(("", port), Handler) as httpd:
+            with ReusableTCPServer((HOST, port), Handler) as httpd:
                 if port != PORT:
                     print(f"⚠️  Port {PORT} was busy — serving on {port} instead")
                 print(f"AI Essay & Quiz Grader → http://localhost:{port}  [{key_state}]")
+                print(f"    bound to {HOST} (loopback only — ไม่เปิดให้เครื่องอื่นใน Wi-Fi เข้าถึง key)")
                 print("กด Ctrl+C เพื่อหยุดเซิร์ฟเวอร์ (ห้ามปิดหน้าต่างนี้ระหว่างนำเสนอ)")
                 try:
                     httpd.serve_forever()
