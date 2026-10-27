@@ -19,12 +19,47 @@ import http.server
 import json
 import os
 import socketserver
+import ssl
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
 
 HERE = Path(__file__).parent.resolve()
+
+
+def build_ssl_context():
+    """An SSLContext that works regardless of how this process was launched.
+
+    python.org's Python looks for its CA bundle at
+    <framework>/etc/openssl/cert.pem, which frequently does not exist. That file
+    is normally papered over by an SSL_CERT_FILE env var in an interactive shell
+    — but launchd/cron/double-click launches have no such var, and every upstream
+    request then fails with CERTIFICATE_VERIFY_FAILED. Resolve the bundle here so
+    the server behaves the same under launchd as it does in a terminal.
+    """
+    candidates = []
+    env_cert = os.environ.get("SSL_CERT_FILE")
+    if env_cert:
+        candidates.append(env_cert)
+    try:
+        import certifi  # bundled with most installs; the canonical CA source
+        candidates.append(certifi.where())
+    except Exception:
+        pass
+    candidates.append("/etc/ssl/cert.pem")  # macOS system bundle
+    for path in candidates:
+        if path and os.path.isfile(path):
+            try:
+                ctx = ssl.create_default_context(cafile=path)
+                return ctx, path
+            except Exception:
+                continue
+    return ssl.create_default_context(), "(openssl default)"
+
+
+SSL_CONTEXT, SSL_CA_SOURCE = build_ssl_context()
+
 PORT = int(os.environ.get("PORT", "8000"))
 # Bind loopback by default: this proxy holds your API key, so it must not be
 # reachable by other machines on the same Wi-Fi. Set HOST=0.0.0.0 to expose it.
@@ -134,7 +169,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             method="POST",
         )
         try:
-            with urllib.request.urlopen(upstream_req, timeout=UPSTREAM_TIMEOUT) as resp:
+            with urllib.request.urlopen(
+                upstream_req, timeout=UPSTREAM_TIMEOUT, context=SSL_CONTEXT
+            ) as resp:
                 data = json.loads(resp.read().decode())
         except urllib.error.HTTPError as e:
             detail = e.read().decode(errors="replace")[:500]
@@ -200,6 +237,7 @@ if __name__ == "__main__":
                     print(f"⚠️  Port {PORT} was busy — serving on {port} instead")
                 print(f"AI Essay & Quiz Grader → http://localhost:{port}  [{key_state}]")
                 print(f"    bound to {HOST} (loopback only — ไม่เปิดให้เครื่องอื่นใน Wi-Fi เข้าถึง key)")
+                print(f"    TLS CA bundle: {SSL_CA_SOURCE}")
                 print("กด Ctrl+C เพื่อหยุดเซิร์ฟเวอร์ (ห้ามปิดหน้าต่างนี้ระหว่างนำเสนอ)")
                 try:
                     httpd.serve_forever()
