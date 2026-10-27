@@ -278,6 +278,7 @@ function bindEssay() {
   renderDemoKit();
   $("btn-grade").onclick = () => gradeEssay(false);
   $("btn-consistency").onclick = () => gradeEssay(true);
+  $("btn-bias").onclick = () => gradeBias();
 }
 
 function renderDemoKit() {
@@ -297,6 +298,77 @@ function renderDemoKit() {
     }));
 }
 
+/** One grading run over a text — shared by single grade, consistency and bias test. */
+async function runOnce(text, rubric) {
+  if (effectiveDemo()) {
+    // simulated results go through the same normalization + evidence check,
+    // so the demo shows the verification chips too
+    const n = normalizeEssayResult(await Demo.gradeEssay(text, rubric), rubric, text);
+    n.demo = true;
+    return n;
+  }
+  const { text: raw } = await API.chat(
+    [{ role: "user", content: buildEssayPrompt(text, rubric) }],
+    { temperature: S.settings.temperature, model: S.settings.model }
+  );
+  const res = normalizeEssayResult(extractJSON(raw), rubric, text);
+  res.demo = false;
+  return res;
+}
+
+function setGradeButtons(disabled) {
+  ["btn-grade", "btn-consistency", "btn-bias"].forEach(id => { $(id).disabled = disabled; });
+}
+
+// One-click bias demo: same argument, two registers (fluent vs non-native),
+// graded in parallel with the same rubric — the gap IS the ethics lesson.
+async function gradeBias() {
+  const a = DEMO_KIT.find(k => k.id === "en-good");
+  const b = DEMO_KIT.find(k => k.id === "en-nonnative");
+  if (!a || !b) return;
+  const rubric = RUBRICS.argumentative;
+  const status = $("grade-status");
+  $("prompt-preview").textContent = buildEssayPrompt(a.text, rubric);
+  setBusy("essay", "กำลังตรวจคู่เทียบอคติ 2 ฉบับพร้อมกัน");
+  setGradeButtons(true);
+  try {
+    const [ra, rb] = await Promise.all([runOnce(a.text, rubric), runOnce(b.text, rubric)]);
+    renderBiasCompare(ra, rb, rubric);
+    status.textContent = "";
+    if (ra.demo) toast("แสดงผลลัพธ์จำลอง (Demo Mode) ไม่ได้ตรวจโดย AI จริง");
+  } catch (err) {
+    status.innerHTML = `<span class="status error">ตรวจไม่สำเร็จ: ${esc(err.detail || err.message || JSON.stringify(err))}</span>`;
+  } finally {
+    setBusy("essay", null);
+    setGradeButtons(false);
+  }
+}
+
+function renderBiasCompare(ra, rb, rubric) {
+  const card = $("essay-result");
+  card.classList.remove("result-empty");
+  const delta = Math.round((ra.total - rb.total) * 10) / 10;
+  const wide = Math.abs(delta) >= 5;
+  card.innerHTML = `
+    ${ra.demo ? '<span class="demo-stamp"><span class="lat">DEMO</span> ผลลัพธ์จำลอง</span>' : ""}
+    <h2 class="card-title">เทียบอคติ: เนื้อหาเดียวกัน สองสำนวนภาษา</h2>
+    <p class="hint">ฉบับแรกภาษาสละสลวย ฉบับที่สองเป็น non-native writer ที่เนื้อหาและเหตุผลเทียบเท่ากัน ตรวจพร้อมกันด้วย rubric เดียวกัน</p>
+    <table class="consistency-table">
+      <tr><th>เกณฑ์</th><th>ภาษาสละสลวย</th><th>non-native</th><th>ส่วนต่าง</th></tr>
+      ${rubric.criteria.map(c => {
+        const sa = (ra.criteria.find(x => x.criterion === c.id) || {}).score ?? 0;
+        const sb = (rb.criteria.find(x => x.criterion === c.id) || {}).score ?? 0;
+        const d = Math.round((sa - sb) * 10) / 10;
+        return `<tr><td class="b-name">${esc(c.name)}</td><td>${sa}</td><td>${sb}</td><td class="${d >= 3 ? "variance-bad" : ""}">${d}</td></tr>`;
+      }).join("")}
+      <tr><td class="b-name">รวม</td><td><b>${ra.total}</b></td><td><b>${rb.total}</b></td><td class="${wide ? "variance-bad" : "variance-good"}"><b>${delta}</b></td></tr>
+    </table>
+    <p style="margin-top:14px;font-size:14px">${wide
+      ? '<span class="hl hl-pink">ส่วนต่างกว้าง: สัญญาณอคติทางสำนวนภาษา ต้องให้มนุษย์ทบทวน</span>'
+      : '<span class="hl hl-green">ส่วนต่างแคบ: ไม่พบสัญญาณอคติชัดในรอบนี้</span>'}</p>
+    <p class="hint" style="margin-top:8px">นี่คือเหตุผลที่แอปแยกเกณฑ์เนื้อหา/เหตุผลออกจากภาษา และบังคับให้ครูยืนยันคะแนนก่อนประกาศ (Bias & Fairness)</p>`;
+}
+
 async function gradeEssay(consistencyMode) {
   const text = $("essay-input").value.trim();
   const status = $("grade-status");
@@ -310,7 +382,7 @@ async function gradeEssay(consistencyMode) {
     : "กำลังตรวจงานชิ้นใหม่ ผลด้านล่างคือของรอบก่อน");
 
   const btn = consistencyMode ? $("btn-consistency") : $("btn-grade");
-  btn.disabled = true; $("btn-grade").disabled = true; $("btn-consistency").disabled = true;
+  btn.disabled = true; setGradeButtons(true);
 
   const results = [];
   // declared outside try so the finally block can always stop the live timer;
@@ -325,16 +397,7 @@ async function gradeEssay(consistencyMode) {
       status.innerHTML = `<span class="spinner"></span> AI กำลังวิเคราะห์… <b>${s} วิ</b>`;
     }, 250);
 
-    const oneRun = async () => {
-      if (effectiveDemo()) return Demo.gradeEssay(text, rubric);
-      const { text: raw } = await API.chat(
-        [{ role: "user", content: prompt }],
-        { temperature: S.settings.temperature, model: S.settings.model }
-      );
-      const res = normalizeEssayResult(extractJSON(raw), rubric);
-      res.demo = false;
-      return res;
-    };
+    const oneRun = () => runOnce(text, rubric);
 
     if (consistencyMode) {
       // Run all 3 in PARALLEL — same total info, ~1/3 the wall time.
@@ -358,21 +421,42 @@ async function gradeEssay(consistencyMode) {
   } finally {
     clearInterval(timer);
     setBusy("essay", null);
-    btn.disabled = false; $("btn-grade").disabled = false; $("btn-consistency").disabled = false;
+    setGradeButtons(false);
   }
 }
 
-function normalizeEssayResult(j, rubric) {
+// Anti-hallucination, enforced in the app itself: every quoted evidence must
+// actually appear in the student's text. Folding ignores case, spaces and
+// punctuation so Thai/English quotes still match their source.
+function foldText(s) {
+  return String(s ?? "").toLowerCase().replace(/\s+/g, "").replace(/[^\p{L}\p{N}]+/gu, "");
+}
+function checkEvidence(evidence, hay) {
+  const ev = String(evidence || "").trim();
+  if (!ev || ev === "ไม่พบ") return "na"; // model honestly declared absence
+  const needle = foldText(ev);
+  if (!needle) return "na";
+  return hay.includes(needle) ? "ok" : "bad";
+}
+
+function normalizeEssayResult(j, rubric, essayText) {
   const byId = {};
   for (const c of (j.criteria || [])) byId[c.criterion || c.id] = c;
+  const hay = foldText(essayText);
   const criteria = rubric.criteria.map(c => {
     const g = byId[c.id] || {};
     const s = typeof g.score === "number" ? Math.max(0, Math.min(c.max, g.score)) : 0;
-    return { criterion: c.id, name: c.name, max: c.max, score: s, comment: g.comment || "(โมเดลไม่ระบุ)", evidence: g.evidence || "ไม่พบ" };
+    return { criterion: c.id, name: c.name, max: c.max, score: s, comment: g.comment || "(โมเดลไม่ระบุ)", evidence: g.evidence || "ไม่พบ", evCheck: checkEvidence(g.evidence, hay) };
   });
   const total = Math.round(criteria.reduce((a, r) => a + r.score, 0) * 10) / 10;
   return { demo: false, total, max: criteria.reduce((a, r) => a + r.max, 0), criteria, feedback: j.feedback || "", suggestions: j.suggestions || [] };
 }
+
+const EV_CHIP = {
+  ok: '<span class="ev-chip ev-ok">✓ ตรงกับตัวงาน</span>',
+  bad: '<span class="ev-chip ev-bad">ตรวจไม่พบข้อความนี้ในตัวงาน</span>',
+  na: '<span class="ev-chip ev-na">โมเดลระบุว่าไม่พบส่วนนี้</span>',
+};
 
 function renderEssayResult(res, rubric) {
   const card = $("essay-result");
@@ -387,10 +471,11 @@ function renderEssayResult(res, rubric) {
         <div class="c-head"><span class="c-name">${esc(c.name)}</span><span class="c-score">${c.score} / ${c.max}</span></div>
         <div class="c-comment">${esc(c.comment)}</div>
         <div class="c-evidence">
-          <span class="c-evidence-label">หลักฐานจากตัวงาน (Anti-Hallucination)</span>
-          <span class="c-quote">“${esc(c.evidence)}”</span>
+          <span class="c-evidence-label">หลักฐานจากตัวงาน (Anti-Hallucination) ${EV_CHIP[c.evCheck || "na"]}</span>
+          <span class="c-quote ${c.evCheck === "bad" ? "q-bad" : ""}">“${esc(c.evidence)}”</span>
         </div>
       </div>`).join("")}
+    ${res.criteria.some(c => c.evCheck === "bad") ? '<p class="ev-warn">มีเกณฑ์ที่อ้างข้อความซึ่งไม่พบในตัวงานจริง ครูควรตรวจก่อนประกาศผล</p>' : ""}
     <div class="feedback-box">
       <span class="hl hl-peach">Feedback รวม</span>
       <div>${esc(res.feedback)}</div>
