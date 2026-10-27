@@ -38,8 +38,11 @@
       <div class="card">
         <h2>1 · วางเรียงความของนักเรียน</h2>
         <textarea id="essay-input" rows="14" placeholder="วางข้อความเรียงความที่นี่…&#10;&#10;ตัวอย่าง: การเปลี่ยนแปลงสภาพภูมิอากาศเป็นปัญหาเร่งด่วนของมนุษยชาติ…"></textarea>
+        <div class="demo-kit">
+          <div class="demo-kit-label">🎬 ชุดสาธิต (Demo Kit) — กดเพื่อโหลดตัวอย่าง</div>
+          <div class="demo-kit-btns" id="demo-kit-btns"></div>
+        </div>
         <div class="row">
-          <button id="btn-sample-essay" class="btn btn-ghost btn-sm">📄 ใส่ตัวอย่างเรียงความ</button>
           <span class="hint">ข้อความจะไม่ถูกบันทึกหรือส่งไปที่ใดนอกจากโมเดล AI ที่คุณเลือก</span>
         </div>
 
@@ -77,6 +80,8 @@
         <textarea id="answers-input" rows="3" placeholder="1a 2b 3c 4a"></textarea>
         <div class="row">
           <button id="btn-sample-quiz" class="btn btn-ghost btn-sm">📄 ใส่ตัวอย่างข้อสอบ</button>
+          <button id="btn-sample-quiz2" class="btn btn-ghost btn-sm">📄 ชุดที่ 2 (จริยธรรม AI)</button>
+          <button id="btn-answers-wrong" class="btn btn-ghost btn-sm">✏️ คำตอบที่ผิดบางส่วน</button>
         </div>
         <details class="transparency">
           <summary>🔍 Transparency — ดูคำสั่ง (prompt) ที่จะส่งให้ AI</summary>
@@ -151,6 +156,7 @@
 
 <script src="js/api.js"></script>
 <script src="js/demo.js"></script>
+<script src="js/demokit.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

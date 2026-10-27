@@ -195,12 +195,26 @@ ${quizText}
 
 // ───────────────────────── Essay grading ─────────────────────────
 function bindEssay() {
-  $("btn-sample-essay").onclick = () => {
-    $("essay-input").value = SAMPLE_ESSAY;
-    toast("ใส่ตัวอย่างเรียงความแล้ว");
-  };
+  renderDemoKit();
   $("btn-grade").onclick = () => gradeEssay(false);
   $("btn-consistency").onclick = () => gradeEssay(true);
+}
+
+function renderDemoKit() {
+  if (typeof DEMO_KIT === "undefined") return;
+  const wrap = $("demo-kit-btns");
+  wrap.innerHTML = DEMO_KIT.map(k =>
+    `<button class="btn btn-ghost btn-sm" data-kit="${k.id}" title="${esc(k.note || k.label)}">${esc(k.label)}</button>`).join("");
+  wrap.querySelectorAll("[data-kit]").forEach(b =>
+    b.addEventListener("click", () => {
+      const k = DEMO_KIT.find(x => x.id === b.dataset.kit);
+      $("essay-input").value = k.text;
+      // select matching rubric
+      const radio = document.querySelector(`input[name=rubric][value="${k.rubric}"]`);
+      if (radio) { radio.checked = true; radio.dispatchEvent(new Event("change")); }
+      wrap.querySelectorAll(".btn").forEach(x => x.classList.toggle("is-on", x === b));
+      toast(k.note || "โหลดตัวอย่างแล้ว — กด 'ตรวจและให้คะแนน' ได้เลย");
+    }));
 }
 
 async function gradeEssay(consistencyMode) {
@@ -344,9 +358,18 @@ function renderAudit() {
 // ───────────────────────── Quiz grading ─────────────────────────
 function bindQuiz() {
   $("btn-sample-quiz").onclick = () => {
-    $("quiz-input").value = SAMPLE_QUIZ;
-    $("answers-input").value = "1a 2b 3c";
-    toast("ใส่ตัวอย่างข้อสอบแล้ว");
+    $("quiz-input").value = DEMO_QUIZZES.set1;
+    $("answers-input").value = DEMO_QUIZZES.answers1;
+    toast("ใส่ตัวอย่างข้อสอบชุดที่ 1 แล้ว (นักเรียนตอบถูกทุกข้อ)");
+  };
+  $("btn-sample-quiz2").onclick = () => {
+    $("quiz-input").value = DEMO_QUIZZES.set2;
+    $("answers-input").value = DEMO_QUIZZES.answersWrong;
+    toast("ใส่ชุดจริยธรรม AI + คำตอบผิดบางส่วน (เพื่อดูการวินิจฉัยรายข้อ)");
+  };
+  $("btn-answers-wrong").onclick = () => {
+    $("answers-input").value = "1a 2d 3b";
+    toast("สลับเป็นคำตอบผิดบางส่วน — กดตรวจเพื่อดูผล ✓/✗ รายข้อ");
   };
   $("btn-quiz-grade").onclick = gradeQuiz;
 }
