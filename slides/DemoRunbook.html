@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Demo Runbook — AI Essay &amp; Quiz Grader</title>
+<style>
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-Regular.ttf'); font-weight: 400; }
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-Medium.ttf'); font-weight: 500; }
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-SemiBold.ttf'); font-weight: 600; }
+@font-face { font-family: 'Kanit'; src: url('file:///Users/tonplamm/Library/Fonts/Kanit-Bold.ttf'); font-weight: 700; }
+@page { size: A4; margin: 18mm 16mm; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Kanit', 'Noto Sans Thai', sans-serif; color: #1c2333; font-size: 13.5px; line-height: 1.6; }
+h1 { font-size: 24px; margin-bottom: 4px; }
+h2 { font-size: 17px; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 2px solid #6c8cff; color: #2a3a8f; page-break-after: avoid; }
+h3 { font-size: 14.5px; margin: 12px 0 4px; }
+.sub { color: #5a6478; margin-bottom: 14px; }
+p, li { color: #2c3446; }
+ul, ol { padding-left: 22px; margin: 4px 0 8px; }
+li { margin-bottom: 4px; }
+code { font-family: 'SF Mono', Menlo, monospace; background: #eef1f8; border: 1px solid #d8deec; border-radius: 5px; padding: 1px 6px; font-size: 12px; color: #2a3a8f; }
+pre { font-family: 'SF Mono', Menlo, monospace; background: #10141f; color: #a8c7fa; border-radius: 8px; padding: 10px 14px; font-size: 12px; margin: 6px 0 10px; overflow-x: auto; }
+.box { border-radius: 10px; padding: 12px 16px; margin: 10px 0; page-break-inside: avoid; }
+.warn { background: #fff6e5; border: 1px solid #f0c36d; }
+.good { background: #e9f9f1; border: 1px solid #7fd8ae; }
+.info { background: #edf1ff; border: 1px solid #a9bcff; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 12.5px; }
+th { background: #2a3a8f; color: #fff; text-align: left; padding: 7px 10px; font-weight: 500; }
+td { padding: 6px 10px; border-bottom: 1px solid #dde3f0; vertical-align: top; }
+tr:nth-child(even) td { background: #f7f9fd; }
+.tag { display: inline-block; background: #6c8cff; color: #fff; border-radius: 999px; padding: 1px 10px; font-size: 11px; font-weight: 500; margin-right: 6px; }
+.say { font-style: italic; color: #44507a; background: #f4f6fc; border-left: 3px solid #6c8cff; padding: 8px 12px; border-radius: 0 8px 8px 0; margin: 6px 0; }
+.big { font-size: 16px; font-weight: 700; }
+.pagebreak { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<h1>🎬 Demo Runbook — AI Essay &amp; Quiz Grader</h1>
+<p class="sub">กลุ่ม Dario Amodei · นำเสนอ Sec วันพุธ · เตรียมก่อนนำเสนอ 15 นาที</p>
+
+<div class="box info">
+<b>สรุปสิ่งที่ต้องทำวันนำเสนอ (3 ขั้นตอน):</b>
+<ol>
+<li>เปิด Terminal → <code>cd ~/Projects/ai-essay-grader</code> → <code>python3 serve.py</code> (ห้ามปิดหน้าต่างนี้)</li>
+<li>เปิดเบราว์เซอร์ → <code>http://localhost:8000</code> → มุมขวาบนต้องขึ้นป้ายเขียว <b>"LIVE · AI ทำงานจริง"</b></li>
+<li>ทำตามคิวการสาธิตด้านล่าง — ทุกอย่างมีปุ่มสำเร็จรูป ไม่ต้องพิมพ์เองเลย</li>
+</ol>
+</div>
+
+<div class="box warn">
+<b>⛔ ห้ามทำ / ข้อควรระวัง:</b>
+<ul>
+<li><b>ห้าม demo จากลิงก์ GitHub Pages</b> — เวอร์ชันนั้นเป็น Demo Mode (ไม่มี proxy) ป้ายจะขึ้นสีเหลือง "DEMO" ถ้าขึ้นแบบนั้นแสดงว่าเปิดผิด URL</li>
+<li><b>ห้ามปิด Terminal ที่รัน serve.py</b> ระหว่างนำเสนอ — ปิดเมื่อไหร่ แอปตายทันที</li>
+<li><b>ห้ามแชร์/โพสต์ไฟล์ <code>key.txt</code></b> หรือแคปหน้าจอที่เห็นเนื้อหาไฟล์นี้</li>
+<li>ถ้าอินเทอร์เน็ตห้องเรียนล่ม → แอปจะ error ชัดเจน ไม่ต้องโกหกว่า live: สลับไปเล่า Demo Mode ได้ (ป้ายเหลือง) หรือเปิดวิดีโอ/สกรีนช็อตสำรอง</li>
+<li>AI ตอบไม่เหมือนกันทุกรอบ — คะแนนอาจต่างจากในเอกสารนี้ <b>เป็นเรื่องปกติ และเป็นจุดขาย</b> (พูดตามสคริปต์ข้อ 4)</li>
+</ul>
+</div>
+
+<h2>📋 คิวการสาธิต (ประมาณ 5–7 นาที)</h2>
+
+<table>
+<tr><th style="width:36px">#</th><th style="width:210px">ทำอะไร (กดอะไร)</th><th>สิ่งที่คนดูจะเห็น + สคริปต์พูด</th></tr>
+
+<tr><td><b>1</b></td>
+<td>แท็บ <b>ตรวจเรียงความ</b> → กดปุ่ม <span class="tag">🇹🇭 เรียงความไทย (คุณภาพดี)</span> → กด <b>✨ ตรวจและให้คะแนน</b></td>
+<td>รอ ~15–40 วินาที (มี spinner) → คะแนนรวม + รายเกณฑ์ 4 ด้าน ทุกเกณฑ์มีคอมเมนต์ภาษาไทย และ <b>กล่อง "หลักฐานจากตัวงาน (Anti-Hallucination)"</b> ที่ quote ข้อความจริงจากเรียงความ<br>
+<div class="say">"สังเกตว่าทุกคะแนน AI ต้องยกข้อความจริงจากงานนักเรียนมาเป็นหลักฐาน — นี่คือกลไกกัน AI มโนที่เราฝังไว้ในระบบ"</div></td></tr>
+
+<tr><td><b>2</b></td>
+<td>เปิด <b>🔍 Transparency — ดูคำสั่ง (prompt) ที่จะส่งให้ AI</b></td>
+<td>เห็น prompt จริงทั้งก้อน รวมถึงกฎ anti-bias ที่เขียนกำกับ AI ไว้<br>
+<div class="say">"ผู้ใช้ดูได้ว่า AI ถูกสั่งอะไร และตัดสินจากเกณฑ์ไหน — ไม่มี black box"</div></td></tr>
+
+<tr><td><b>3</b></td>
+<td>กด <span class="tag">🇬🇧 English essay (strong)</span> → ตรวจ → จดคะแนน → แล้วกด <span class="tag">🌏 non-native writer — bias test</span> → ตรวจอีกครั้ง</td>
+<td><b>ไฮไลต์ของงาน!</b> ผลทดสอบจริงที่เราวัดได้: strong ได้ <b class="big">36/40</b> vs non-native ได้ <b class="big">26/40</b> ทั้งที่เนื้อหาและเหตุผลลึกพอ ๆ กัน ต่างแค่ความลื่นไหลของภาษา<br>
+<div class="say">"สองงานนี้เราจงใจเขียนให้เนื้อหาดีเท่ากัน แต่ชิ้นหนึ่งเขียนโดยจำลองสไตล์ non-native — ผลต่าง 10 คะแนนเต็มคือหลักฐานว่า Bias &amp; Fairness ไม่ใช่ทฤษฎีลอย ๆ แต่เกิดขึ้นจริงกับระบบแบบนี้ และนี่คือเหตุผลที่ต้องมีมนุษย์ทบทวนคะแนนเสมอ"</div></td></tr>
+
+<tr><td><b>4</b></td>
+<td>กด <b>🔁 Consistency Check (×3)</b></td>
+<td>ระบบตรวจงานเดิม 3 รอบ → ตารางเทียบคะแนนรายเกณฑ์รายรอบ พร้อมส่วนต่าง (รอบทดสอบจริงเราได้ 34→34→30 = <b>แกว่ง 4 คะแนน</b>)<br>
+<div class="say">"งานเดิม คนเดิม ตรวจ 3 ครั้ง คะแนนไม่เท่ากัน — นี่คือปัญหา Reliability ที่ผู้ใช้อาจไม่รู้ตัว ถ้าเราไม่โชว์ให้ดูตรง ๆ"</div></td></tr>
+
+<tr><td><b>5</b></td>
+<td>ตรงช่อง <b>สิทธิ์ครู (Human Oversight)</b> → แก้คะแนน → ใส่เหตุผล → กด <b>✍️ บันทึก</b> → เปิดแท็บ <b>Audit Log</b></td>
+<td>เห็นบันทึก: เวลา · คะแนน AI → คะแนนที่มนุษย์แก้ · เหตุผล (ถ้าไม่ใส่เหตุผล ระบบ<b>ไม่ยอมให้บันทึก</b> — ลองให้ดูได้)<br>
+<div class="say">"ครูแก้คะแนนได้เสมอ แต่ต้องรับผิดชอบเป็นลายลักษณ์อักษร — AI เป็นผู้ช่วย ไม่ใช่ผู้ตัดสิน"</div></td></tr>
+
+<tr><td><b>6</b></td>
+<td>แท็บ <b>ตรวจข้อสอบปรนัย</b> → กด <span class="tag">📄 ชุดที่ 2 (จริยธรรม AI)</span> → กด <b>✨ สร้างเฉลยและตรวจคำตอบ</b></td>
+<td>AI สร้างเฉลย 4 ข้อพร้อมคำอธิบายรายข้อ → เทียบคำตอบนักเรียน (ชุดนี้จงใจตอบผิด 1 ข้อ) → เห็น ✓/✗ รายข้อ + คะแนน 3/4<br>
+<div class="say">"โจทย์ชุดนี้คือข้อสอบจริยธรรม AI เอง — ให้ AI เฉลยข้อสอบที่ถามเรื่องจริยธรรมของมันเอง เป็นการปิดท้ายที่ชวนคิดดีครับ/ค่ะ"</div></td></tr>
+
+<tr><td><b>7</b></td>
+<td>กด <b>🔒 ความเป็นส่วนตัว</b> (มุมขวาบน)</td>
+<td>แสดงนโยบาย: ไม่เก็บงานนักเรียน · key อยู่ฝั่ง proxy ไม่ผ่านเบราว์เซอร์ · audit log อยู่ในเครื่อง<br>
+<div class="say">"Privacy by design — และเราระบุข้อจำกัดตรง ๆ ว่าถ้าส่งงานไป API ภายนอก ข้อมูลยังอยู่ใต้นโยบายผู้ให้บริการ โรงเรียนที่ต้องการเข้มงวดควรใช้ on-premise model"</div></td></tr>
+</table>
+
+<div class="box good">
+<b>💡 ถ้าเวลาเหลือ:</b> กด <span class="tag">💼 Pitch Deck</span> เพื่อโชว์ว่าสลับ rubric ได้ (ตรวจข้อเสนอธุรกิจ EduFair) · หรือกด <span class="tag">🇹🇭 ควรปรับปรุง</span> เพื่อโชว์ว่างานคุณภาพต่ำได้คะแนนต่ำจริง (ระบบไม่ได้ใจดีกับทุกงาน)
+</div>
+
+<h2 class="pagebreak">🆘 แผนสำรองเมื่อมีปัญหา (Troubleshooting)</h2>
+<table>
+<tr><th style="width:230px">อาการ</th><th>สาเหตุ + วิธีแก้</th></tr>
+<tr><td>ป้ายมุมขวาขึ้น <b>"DEMO MODE"</b> ทั้งที่เปิด localhost</td><td>serve.py ไม่ได้รัน หรือรันโดยไม่เห็น key → เปิด Terminal ใหม่: <code>cd ~/Projects/ai-essay-grader && python3 serve.py</code> แล้ว<b>รีเฟรชหน้าเว็บ</b> — ป้ายต้องเปลี่ยนเป็นเขียว LIVE (Demo Mode ก็ยังนำเสนอได้ แต่ต้องบอกตรง ๆ ว่าเป็นผลจำลอง)</td></tr>
+<tr><td>กดตรวจแล้วขึ้น ❌ error</td><td>ส่วนใหญ่คือเน็ตหลุด/ช้า หรือ API ตอบว่าง → กดปุ่มตรวจซ้ำได้เลย (ระบบมี auto-retry 1 ครั้งอยู่แล้ว) ถ้ายังไม่หาย รอ 10 วิแล้วลองใหม่</td></tr>
+<tr><td>รอนานผิดปกติ (&gt; 1 นาที)</td><td>โมเดลเป็น reasoning model ใช้เวลา "คิด" ก่อนตอบ → ระหว่างรอให้พูดอธิบาย spinner / เปิด Transparency panel ฆ่าเวลา — ไม่ต้องนิ่งเงียบ</td></tr>
+<tr><td>Port 8000 ถูกใช้</td><td><code>PORT=8080 python3 serve.py</code> แล้วเปิด <code>http://localhost:8080</code></td></tr>
+<tr><td>อินเทอร์เน็ตห้องใช้ไม่ได้เลย</td><td>เปิดสกรีนช็อต/คลิปที่เตรียมไว้ หรือสลับไป Demo Mode แล้วพูดตรง ๆ ว่า "โหมดจำลองมีไว้สำหรับสถานการณ์แบบนี้ — สังเกตว่าแอปติดป้าย DEMO ชัดเจน ไม่หลอกผู้ใช้ว่าผลเป็น AI จริง" (เปลี่ยนจุดอ่อนเป็นตัวอย่างความโปร่งใสได้!)</td></tr>
+</table>
+
+<h3>✅ Checklist ก่อนออกจากหอพัก</h3>
+<ul>
+<li>☐ โน้ตบุ๊กชาร์จเต็ม + สายชาร์จติดกระเป๋า (ห้าม demo บนแบตเตอรี่ 20%)</li>
+<li>☐ ต่อเน็ตมือถือ (hotspot) สำรองไว้ — อย่าพึ่ง Wi-Fi ห้องเรียนอย่างเดียว</li>
+<li>☐ เปิดแท็บเบราว์เซอร์ค้างไว้ 2 แท็บ: แอป + สไลด์ PDF</li>
+<li>☐ ปิด notification ทุกอย่าง (Do Not Disturb) ก่อนขึ้นนำเสนอ</li>
+<li>☐ ซ้อมคิว 1 รอบเต็มจับเวลา (เป้า: 5–7 นาที)</li>
+<li>☐ ส่งไฟล์ <code>DarioAmodei-EthicsInAI-Wed.pdf</code> เข้า Classroom <b>ก่อน 13.00 น.</b> วันนำเสนอ</li>
+</ul>
+
+<h3>🎤 คำถามที่อาจารย์อาจถาม + แนวคำตอบ</h3>
+<ul>
+<li><b>"คะแนนเชื่อถือได้แค่ไหน?"</b> → ตอบตรง ๆ: ไม่น่าเชื่อถือพอให้ตัดสินมนุษย์เดี่ยว ๆ — นั่นคือเหตุผลที่เราทำ Consistency Check ให้เห็นกับตา และบังคับ Teacher Override พร้อม audit log</li>
+<li><b>"ใครรับผิดชอบถ้า AI ให้คะแนนผิด?"</b> → ตามดีไซน์ของเรา: ครูผู้ยืนยันผลเป็นคนรับผิดชอบ (human-in-the-loop) โดยมี audit trail ย้อนดูได้ — และเรายอมรับว่าในกฎหมายปัจจุบันยังไม่มีคำตอบระดับอุตสาหกรรมที่ชัด</li>
+<li><b>"ข้อมูลนักเรียนไปไหน?"</b> → ไม่ถูกเก็บฝั่งเรา (stateless) แต่ถูกส่งไปผู้ให้บริการโมเดลตาม prompt ที่แสดงโปร่งใสใน Transparency panel — ถ้าเป็นข้อมูลอ่อนไหวของเยาวชนจริง ควร anonymize ก่อน หรือใช้ on-premise model</li>
+<li><b>"vibe coding ทั้งโปรเจกต์แบบนี้ นักศึกษาได้อะไร?"</b> → เราไม่ได้เขียนโค้ดเอง แต่เรา<b>กำกับ ตรวจสอบ และรับผิดชอบ</b>: กำหนดสถาปัตยกรรม, เทียบผล AI กับ expectation, เจอบั๊กจริง (reasoning model ตอบว่าง) และตัดสินใจเชิงจริยธรรมทุกอย่างที่ฝังในแอป — สไลด์หน้า 6 เล่าตรง ๆ ว่าความเสี่ยงคืออะไร</li>
+</ul>
+
+<p style="margin-top:18px;color:#5a6478">ผลทดสอบจริงทั้งหมดในเอกสารนี้ (36 vs 26 คะแนน bias test, 34→34→30 consistency) มาจากการรันแอปกับ Qwen 3.8 Max จริงเมื่อวันที่ 27 ต.ค. 2569 — คะแนนวันนำเสนอจริงอาจต่างไปเล็กน้อย ซึ่ง<b>คาดได้และอธิบายได้</b></p>
+
+</body>
+</html>
