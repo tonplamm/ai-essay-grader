@@ -4,7 +4,7 @@
 const DEMO_KIT = [
   {
     id: "th-good",
-    label: "🇹🇭 เรียงความไทย (คุณภาพดี)",
+    label: "เรียงความไทย (คุณภาพดี)",
     rubric: "general",
     text: `ปัญญาประดิษฐ์กับการศึกษาไทย: โอกาสและความท้าทาย
 
@@ -18,7 +18,7 @@ const DEMO_KIT = [
   },
   {
     id: "th-weak",
-    label: "🇹🇭 เรียงความไทย (ควรปรับปรุง)",
+    label: "เรียงความไทย (ควรปรับปรุง)",
     rubric: "general",
     text: `AI กับการเรียน
 
@@ -32,7 +32,7 @@ AI ยังมีปัญหาเรื่องความลำเอี�
   },
   {
     id: "en-good",
-    label: "🇬🇧 English essay (strong)",
+    label: "English essay (strong)",
     rubric: "argumentative",
     text: `Artificial Intelligence in the Classroom: A Tool, Not a Teacher
 
@@ -48,7 +48,7 @@ In conclusion, AI should amplify teachers' judgment, never replace it. An educat
   },
   {
     id: "en-nonnative",
-    label: "🌏 English essay (non-native writer — bias test)",
+    label: "English essay (non-native — bias test)",
     rubric: "argumentative",
     text: `AI in education is very important topic now. Many school use AI for check homework and give score to student. I think AI can help teacher because teacher have many student and no time for check all paper one by one. AI is fast and never tired.
 
@@ -59,11 +59,11 @@ Third problem is bias. AI learn from data of people who speak English as first l
 In my opinion, school should use AI only as helper, not as judge. Teacher must check the score from AI before give to student. And student should have right to ask why they get this score. If we cannot explain the score, we should not use the system.
 
 To conclude, AI is powerful tool but education is about human being. Machine can count the words, but only human can see the effort behind them.`,
-    note: "⚠️ ทดสอบอคติ: เนื้อหา/เหตุผลดีพอ ๆ กับชุด strong แต่ภาษาง่ายกว่า — เทียบคะแนนดูว่า AI ลำเอียงหรือไม่",
+    note: "ทดสอบอคติ: เนื้อหา/เหตุผลดีพอ ๆ กับชุด strong แต่ภาษาง่ายกว่า — เทียบคะแนนดูว่า AI ลำเอียงหรือไม่",
   },
   {
     id: "th-pitch",
-    label: "💼 Pitch Deck (Rubric ธุรกิจ)",
+    label: "Pitch Deck (Rubric ธุรกิจ)",
     rubric: "pitch",
     text: `EduFair — ระบบตรวจงานอัตโนมัติที่โปร่งใสสำหรับโรงเรียนไทย
 

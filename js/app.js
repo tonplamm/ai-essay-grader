@@ -54,6 +54,7 @@ const $ = id => document.getElementById(id);
   bindEssay();
   bindQuiz();
   bindAudit();
+  bindPresentation();
 
   S.liveProxy = await API.probe();
 
@@ -79,13 +80,9 @@ function fillModelSelect() {
   if (!sel) return;
   sel.innerHTML = S.models.map(m =>
     `<option value="${esc(m.id)}" ${m.id === S.settings.model ? "selected" : ""}>${esc(m.label || m.id)}</option>`).join("");
+  // the select already shows the human label; raw gateway ids stay out of the UI
   const hint = $("model-hint");
-  if (hint) {
-    const cur = S.models.find(m => m.id === S.settings.model);
-    hint.textContent = cur
-      ? `กำลังใช้: ${cur.id}`
-      : "";
-  }
+  if (hint) hint.textContent = "";
 }
 
 function effectiveDemo() {
@@ -102,6 +99,21 @@ function updateModeBadge() {
     b.textContent = "LIVE · AI ทำงานจริง";
     b.className = "badge badge-live";
     b.title = "เรียก AI ผ่าน local proxy — key อยู่ฝั่งเซิร์ฟเวอร์ ไม่ผ่านเบราว์เซอร์";
+  }
+}
+
+/* mark the previous result as stale while a new run is in flight, so nobody
+   reads last round's scores as this round's */
+function setBusy(which, msg) {
+  const note = $(which + "-busy");
+  const res = $(which === "essay" ? "essay-result" : "quiz-result");
+  if (msg) {
+    note.innerHTML = `<span class="spinner"></span>${esc(msg)}`;
+    note.classList.remove("hidden");
+    res.classList.add("result-stale");
+  } else {
+    note.classList.add("hidden");
+    res.classList.remove("result-stale");
   }
 }
 
@@ -131,19 +143,36 @@ function bindTabs() {
 }
 
 // ───────────────────────── Modals ─────────────────────────
+function openModal(id) {
+  const m = $(id);
+  m._opener = document.activeElement;
+  m.classList.remove("hidden");
+  // land focus inside the dialog so keyboard users don't stay on the page behind it
+  const first = m.querySelector("select, input, button");
+  if (first) first.focus();
+}
+function closeModal(m) {
+  m.classList.add("hidden");
+  if (m._opener && m._opener.focus) m._opener.focus();
+}
 function bindModals() {
-  $("btn-privacy").onclick = () => $("modal-privacy").classList.remove("hidden");
+  $("btn-privacy").onclick = () => openModal("modal-privacy");
   $("btn-settings").onclick = () => {
     $("set-mode").value = S.settings.mode;
     $("set-temp").value = S.settings.temperature;
     $("set-temp-out").value = S.settings.temperature;
+    $("set-pres").checked = localStorage.getItem("aeg_pres") === "1";
     fillModelSelect();
-    $("modal-settings").classList.remove("hidden");
+    openModal("modal-settings");
   };
   document.querySelectorAll(".modal-close").forEach(b =>
-    b.addEventListener("click", () => b.closest(".modal-backdrop").classList.add("hidden")));
+    b.addEventListener("click", () => closeModal(b.closest(".modal-backdrop"))));
   document.querySelectorAll(".modal-backdrop").forEach(m =>
-    m.addEventListener("click", e => { if (e.target === m) m.classList.add("hidden"); }));
+    m.addEventListener("click", e => { if (e.target === m) closeModal(m); }));
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    document.querySelectorAll(".modal-backdrop:not(.hidden)").forEach(closeModal);
+  });
 }
 
 function bindSettings() {
@@ -160,8 +189,27 @@ function bindSettings() {
     localStorage.setItem("aeg_settings", JSON.stringify(S.settings));
     fillModelSelect();
     updateModeBadge();
-    toast(`บันทึกแล้ว · โมเดล: ${S.settings.model}`);
+    const cur = S.models.find(m => m.id === S.settings.model);
+    toast(`บันทึกการตั้งค่าแล้ว (โมเดล: ${cur ? (cur.label || cur.id) : S.settings.model})`);
   }
+}
+
+// ───────────────────────── Presentation mode ─────────────────────────
+// auditorium scaling, lives in Settings with the other demo knobs and is
+// remembered so it survives reloads mid-demo
+function bindPresentation() {
+  const box = $("set-pres");
+  const stored = () => localStorage.getItem("aeg_pres") === "1";
+  const apply = on => document.documentElement.classList.toggle("pres", on);
+  apply(stored());
+  box.checked = stored();
+  box.onchange = () => {
+    localStorage.setItem("aeg_pres", box.checked ? "1" : "0");
+    apply(box.checked);
+    toast(box.checked
+      ? "โหมดนำเสนอ: ขยายตัวอักษรสำหรับจอโปรเจกเตอร์แล้ว"
+      : "ปิดโหมดนำเสนอ: กลับสู่ขนาดปกติ");
+  };
 }
 
 // ───────────────────────── Rubric picker ─────────────────────────
@@ -172,7 +220,7 @@ function renderRubrics() {
       <input type="radio" name="rubric" value="${key}" ${key === S.currentRubric ? "checked" : ""}>
       <span>
         <span class="r-name">${esc(r.name)}</span><br>
-        <span class="r-desc">${esc(r.desc)} — รวม ${r.criteria.reduce((a, c) => a + c.max, 0)} คะแนน</span>
+        <span class="r-desc">${esc(r.desc).replace(/ · /g, ", ")} รวม ${r.criteria.reduce((a, c) => a + c.max, 0)} คะแนน</span>
       </span>
     </label>`).join("");
   wrap.querySelectorAll("input[name=rubric]").forEach(inp =>
@@ -257,18 +305,24 @@ async function gradeEssay(consistencyMode) {
   const rubric = RUBRICS[S.currentRubric];
   const prompt = buildEssayPrompt(text, rubric);
   $("prompt-preview").textContent = prompt;
+  setBusy("essay", consistencyMode
+    ? "กำลังตรวจพร้อมกัน 3 รอบ ผลด้านล่างคือของรอบก่อน"
+    : "กำลังตรวจงานชิ้นใหม่ ผลด้านล่างคือของรอบก่อน");
 
   const btn = consistencyMode ? $("btn-consistency") : $("btn-grade");
   btn.disabled = true; $("btn-grade").disabled = true; $("btn-consistency").disabled = true;
 
   const results = [];
+  // declared outside try so the finally block can always stop the live timer;
+  // leaking it would overwrite the error message every 250ms forever
+  let timer = null;
   try {
     // Live elapsed timer — grading can take 1-3 min with a reasoning model,
     // so show progress instead of a frozen spinner.
     const t0 = performance.now();
-    const timer = setInterval(() => {
+    timer = setInterval(() => {
       const s = Math.round((performance.now() - t0) / 1000);
-      status.innerHTML = `<span class="spinner"></span> AI กำลังวิเคราะห์… <b>${s}s</b>`;
+      status.innerHTML = `<span class="spinner"></span> AI กำลังวิเคราะห์… <b>${s} วิ</b>`;
     }, 250);
 
     const oneRun = async () => {
@@ -298,10 +352,12 @@ async function gradeEssay(consistencyMode) {
     else renderEssayResult(results[0], rubric);
 
     status.textContent = "";
-    if (results[0].demo) toast("แสดงผลลัพธ์จำลอง (Demo Mode) — ไม่ได้ตรวจโดย AI จริง");
+    if (results[0].demo) toast("แสดงผลลัพธ์จำลอง (Demo Mode) ไม่ได้ตรวจโดย AI จริง");
   } catch (err) {
-    status.innerHTML = `<span class="status error">❌ ${esc(err.detail || err.message || JSON.stringify(err))}</span>`;
+    status.innerHTML = `<span class="status error">ตรวจไม่สำเร็จ: ${esc(err.detail || err.message || JSON.stringify(err))}</span>`;
   } finally {
+    clearInterval(timer);
+    setBusy("essay", null);
     btn.disabled = false; $("btn-grade").disabled = false; $("btn-consistency").disabled = false;
   }
 }
@@ -320,24 +376,31 @@ function normalizeEssayResult(j, rubric) {
 
 function renderEssayResult(res, rubric) {
   const card = $("essay-result");
+  card.classList.remove("result-empty"); // empty-state centering must not leak into results
   card.innerHTML = `
-    ${res.demo ? '<span class="demo-stamp">DEMO — ผลลัพธ์จำลอง</span>' : ""}
-    <div class="score-hero"><span class="big">${res.total}</span><span class="of">/ ${res.max} คะแนน</span></div>
+    ${res.demo ? '<span class="demo-stamp"><span class="lat">DEMO</span> ผลลัพธ์จำลอง</span>' : ""}
+    <div class="score-patch">
+      <div class="score-hero"><span class="big">${res.total}</span><span class="of">/ ${res.max} คะแนน</span></div>
+    </div>
     ${res.criteria.map((c, i) => `
       <div class="criterion">
         <div class="c-head"><span class="c-name">${esc(c.name)}</span><span class="c-score">${c.score} / ${c.max}</span></div>
         <div class="c-comment">${esc(c.comment)}</div>
-        <div class="c-evidence"><span class="c-evidence-label">หลักฐานจากตัวงาน (Anti-Hallucination):</span>“${esc(c.evidence)}”</div>
+        <div class="c-evidence">
+          <span class="c-evidence-label">หลักฐานจากตัวงาน (Anti-Hallucination)</span>
+          <span class="c-quote">“${esc(c.evidence)}”</span>
+        </div>
       </div>`).join("")}
     <div class="feedback-box">
-      <h3>💬 Feedback รวม</h3>${esc(res.feedback)}
-      ${res.suggestions && res.suggestions.length ? `<h3 style="margin-top:10px">🛠 ข้อเสนอแนะ</h3><ul style="padding-left:20px;font-size:13px">${res.suggestions.map(s => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}
+      <span class="hl hl-peach">Feedback รวม</span>
+      <div>${esc(res.feedback)}</div>
+      ${res.suggestions && res.suggestions.length ? `<span class="hl hl-green" style="margin-top:10px">ข้อเสนอแนะ</span><ul>${res.suggestions.map(s => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}
     </div>
     <div class="override-row">
-      <b style="font-size:13px">สิทธิ์ครู (Human Oversight):</b>
+      <span class="override-label">สิทธิ์ครู (Human Oversight):</span>
       <input type="number" id="override-score" min="0" max="${res.max}" step="0.5" value="${res.total}">
       <input type="text" id="override-reason" placeholder="เหตุผลของการแก้ไขคะแนน…" style="flex:1;min-width:180px">
-      <button class="btn btn-outline btn-sm" id="btn-override">✍️ บันทึกคะแนนที่แก้ไข</button>
+      <button class="btn btn-outline btn-sm" id="btn-override">บันทึกคะแนนที่แก้ไข</button>
     </div>`;
   $("btn-override").onclick = () => saveOverride(res);
 }
@@ -348,14 +411,16 @@ function renderConsistency(results, rubric) {
   const spread = Math.round((max - min) * 10) / 10;
   const good = spread <= 1;
   const card = $("essay-result");
+  card.classList.remove("result-empty");
   card.innerHTML = `
-    ${results[0].demo ? '<span class="demo-stamp">DEMO — ผลลัพธ์จำลอง</span>' : ""}
-    <h2>🔁 Consistency Check — งานเดิม ตรวจ ${results.length} รอบ</h2>
+    ${results[0].demo ? '<span class="demo-stamp"><span class="lat">DEMO</span> ผลลัพธ์จำลอง</span>' : ""}
+    <h2 class="card-title"><span class="lat">Consistency Check</span>: งานเดิม ตรวจ ${results.length} รอบ</h2>
     <table class="consistency-table">
       <tr><th>รอบ</th>${rubric.criteria.map(c => `<th>${esc(c.name)}</th>`).join("")}<th>รวม</th></tr>
-      ${results.map((r, i) => `<tr><td>${i + 1}</td>${r.criteria.map(c => `<td>${c.score}</td>`).join("")}<td><b>${r.total}</b></td></tr>`).join("")}
+      ${results.map((r, i) => `<tr><td>${i + 1}</td>${r.criteria.map(c => `<td>${c.score}</td>`).join("")}<td>${r.total}</td></tr>`).join("")}
     </table>
-    <p style="margin-top:12px;font-size:14px">คะแนนรวมต่ำสุด ${min} · สูงสุด ${max} → ส่วนต่าง <span class="${good ? "variance-good" : "variance-bad"}">${spread} คะแนน</span> ${good ? "✅ สม่ำเสมอ" : "⚠️ แกว่งมาก — นี่คือปัญหา Consistency & Reliability ที่ต้องระวังในระบบตรวจคะแนนจริง"}</p>
+    <p style="margin-top:14px;font-size:14px">คะแนนรวมต่ำสุด ${min} สูงสุด ${max} ส่วนต่าง <span class="${good ? "variance-good" : "variance-bad"}">${spread} คะแนน</span>
+      ${good ? '<span class="hl hl-green">สม่ำเสมอ</span>' : '<span class="hl hl-pink">แกว่งมาก: ปัญหา <span class="lat">Consistency & Reliability</span> ที่ต้องระวังในระบบตรวจคะแนนจริง</span>'}</p>
     <p class="hint" style="margin-top:8px">แนวทางลด: ใช้ temperature ต่ำ, ตรวจหลายรอบแล้วหามัธยฐาน, และมีมนุษย์ทบทวนคะแนนที่ระบบแกว่ง</p>`;
 }
 
@@ -374,6 +439,7 @@ function saveOverride(aiResult) {
     rubric: S.currentRubric,
     demo: aiResult.demo,
     excerpt: S.lastEssayText.slice(0, 80),
+    truncated: S.lastEssayText.length > 80,
   });
   localStorage.setItem("aeg_audit", JSON.stringify(log));
   toast("บันทึกการแก้ไขแล้ว — ดูได้ที่แท็บ Audit Log");
@@ -393,9 +459,9 @@ function renderAudit() {
   if (!log.length) { el.innerHTML = '<p class="result-empty">ยังไม่มีการแก้ไขคะแนนโดยมนุษย์</p>'; return; }
   el.innerHTML = log.map(e => `
     <div class="audit-entry">
-      <div class="a-time">${new Date(e.ts).toLocaleString("th-TH")}${e.demo ? " · DEMO" : ""}</div>
-      <div class="a-detail">คะแนน AI <b>${e.aiScore}</b> → มนุษย์แก้ไขเป็น <b>${e.humanScore}</b> · เหตุผล: ${esc(e.reason)}</div>
-      <div class="a-time" style="margin-top:3px">งาน: “${esc(e.excerpt)}…”</div>
+      <div class="a-time">${new Date(e.ts).toLocaleString("th-TH")}${e.demo ? " (DEMO)" : ""}</div>
+      <div class="a-detail">คะแนน AI <b>${e.aiScore}</b> ครูแก้ไขเป็น <b>${e.humanScore}</b> เหตุผล: ${esc(e.reason)}</div>
+      <div class="a-time" style="margin-top:3px">งาน: “${esc(e.excerpt)}${e.truncated ? "…" : ""}”</div>
     </div>`).join("");
 }
 
@@ -404,16 +470,16 @@ function bindQuiz() {
   $("btn-sample-quiz").onclick = () => {
     $("quiz-input").value = DEMO_QUIZZES.set1;
     $("answers-input").value = DEMO_QUIZZES.answers1;
-    toast("ใส่ตัวอย่างข้อสอบชุดที่ 1 แล้ว (นักเรียนตอบถูกทุกข้อ)");
+    toast("ใส่ตัวอย่างชุดที่ 1 แล้ว (นักเรียนตอบถูกทุกข้อ)");
   };
   $("btn-sample-quiz2").onclick = () => {
     $("quiz-input").value = DEMO_QUIZZES.set2;
     $("answers-input").value = DEMO_QUIZZES.answersWrong;
-    toast("ใส่ชุดจริยธรรม AI + คำตอบผิดบางส่วน (เพื่อดูการวินิจฉัยรายข้อ)");
+    toast("ใส่ตัวอย่างชุดที่ 2 แล้ว (คำตอบผิดบางส่วน)");
   };
   $("btn-answers-wrong").onclick = () => {
     $("answers-input").value = "1a 2d 3b";
-    toast("สลับเป็นคำตอบผิดบางส่วน — กดตรวจเพื่อดูผล ✓/✗ รายข้อ");
+    toast("ใส่คำตอบที่ผิดบางส่วนแล้ว กดตรวจเพื่อดูผลถูก/ผิดรายข้อ");
   };
   $("btn-quiz-grade").onclick = gradeQuiz;
 }
@@ -426,6 +492,7 @@ async function gradeQuiz() {
 
   const prompt = buildQuizPrompt(quizText);
   $("quiz-prompt-preview").textContent = prompt;
+  setBusy("quiz", "กำลังสร้างเฉลยชุดใหม่ ผลด้านล่างคือของรอบก่อน");
 
   $("btn-quiz-grade").disabled = true;
   status.innerHTML = '<span class="spinner"></span> AI กำลังสร้างเฉลย…';
@@ -451,29 +518,31 @@ async function gradeQuiz() {
     }
     renderQuizResult(res);
     status.textContent = "";
-    if (res.demo) toast("แสดงผลลัพธ์จำลอง (Demo Mode)");
+    if (res.demo) toast("แสดงผลลัพธ์จำลอง (Demo Mode) ไม่ได้ตรวจโดย AI จริง");
   } catch (err) {
-    status.innerHTML = `<span class="status error">❌ ${esc(err.detail || err.message || JSON.stringify(err))}</span>`;
+    status.innerHTML = `<span class="status error">ตรวจไม่สำเร็จ: ${esc(err.detail || err.message || JSON.stringify(err))}</span>`;
   } finally {
+    setBusy("quiz", null);
     $("btn-quiz-grade").disabled = false;
   }
 }
 
 function renderQuizResult(res) {
   const el = $("quiz-result");
+  el.classList.remove("result-empty");
   el.innerHTML = `
-    ${res.demo ? '<span class="demo-stamp">DEMO — ผลลัพธ์จำลอง</span>' : ""}
+    ${res.demo ? '<span class="demo-stamp"><span class="lat">DEMO</span> ผลลัพธ์จำลอง</span>' : ""}
     <div class="score-hero"><span class="big">${res.total}</span><span class="of">/ ${res.max} ข้อ</span></div>
     ${res.items.map(it => `
       <div class="quiz-item">
         <div class="q-head">
-          <span>ข้อ ${it.n} — เฉลย: ${it.key.toUpperCase()}${it.student ? ` · นักเรียนตอบ: ${it.student.toUpperCase()}` : ""}</span>
+          <span>ข้อ ${it.n} เฉลย ${it.key.toUpperCase()}${it.student ? ` (นักเรียนตอบ ${it.student.toUpperCase()})` : ""}</span>
           <span class="${it.student === it.key ? "q-correct" : "q-wrong"}">${it.student ? (it.student === it.key ? "✓ ถูก" : "✗ ผิด") : "— ไม่ได้ตอบ"}</span>
         </div>
         <div class="q-explain">${esc(it.explanation)}</div>
       </div>`).join("")}
     ${res.note ? `<p class="hint" style="margin-top:10px">${esc(res.note)}</p>` : ""}
-    <p class="hint" style="margin-top:10px">⚠️ ครูควรทบทวนเฉลยก่อนนำไปใช้จริง — AI อาจเฉลยผิดได้ (Human Oversight)</p>`;
+    <p class="hint" style="margin-top:12px">ครูควรทบทวนเฉลยก่อนนำไปใช้จริง — AI อาจเฉลยผิดได้ (Human Oversight)</p>`;
 }
 
 // ───────────────────────── Samples ─────────────────────────

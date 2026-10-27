@@ -39,11 +39,11 @@ UPSTREAM_TIMEOUT = int(os.environ.get("UPSTREAM_TIMEOUT", "600"))
 # qwen3.8-max : essay 41-290s (reasoning tokens), intermittent connection resets.
 AVAILABLE_MODELS = [
     {"id": "nta-gptoss/openai/gpt-oss-120b",
-     "label": "GPT-OSS 120B — เร็ว (~10 วิ) · เสถียร · แนะนำ"},
+     "label": "GPT-OSS 120B (เร็ว ~10 วิ, เสถียร, แนะนำ)"},
     {"id": "qwen3.8-max",
-     "label": "Qwen 3.8 Max — ช้า (~40-120 วิ) · คิดละเอียดกว่า"},
+     "label": "Qwen 3.8 Max (ช้า ~40-120 วิ, คิดละเอียดกว่า)"},
     {"id": "nta-qwen/Qwen/Qwen3.8-27B",
-     "label": "Qwen 3.8 27B — ช้า · (ทดสอบแล้วไม่ผ่าน JSON)"},
+     "label": "Qwen 3.8 27B (ช้า, ทดสอบแล้วไม่ผ่าน JSON)"},
 ]
 
 
